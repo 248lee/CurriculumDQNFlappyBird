@@ -49,11 +49,11 @@ class GameState:
         newPipe1 = getRandomPipe()
         #newPipe2 = getRandomPipe()
         self.upperPipes = [
-            {'x': SCREENWIDTH, 'y': newPipe1[0]['y'], 'type': 0},
+            newPipe1[0]
             #{'x': SCREENWIDTH + (SCREENWIDTH / 2) + 30, 'y': newPipe2[0]['y'], 'type': 1},
         ]
         self.lowerPipes = [
-            {'x': SCREENWIDTH, 'y': newPipe1[1]['y'], 'type': 0},
+            newPipe1[1]
             #{'x': SCREENWIDTH + (SCREENWIDTH / 2) + 30, 'y': newPipe2[1]['y'], 'type': 1},
         ]
 
