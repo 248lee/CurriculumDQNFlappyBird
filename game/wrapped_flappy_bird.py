@@ -201,7 +201,7 @@ def getRandomPipe():
     index = random.randint(0, len(gapYs)-1)
     gapY = gapYs[index]
 
-    gapY += int(BASEY * 0.2)
+    gapY += int(BASEY * 0.2) + SCREENHEIGHT * random.uniform(-0.5, 0.5)
     pipeX = SCREENWIDTH + 10
 
     t = random.randint(0, 1)
