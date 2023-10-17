@@ -200,6 +200,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
         ns.close()
     if stage == 1:
         net1 = MyNet()
+        net1_target = MyNet()
         optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-5, epsilon=1e-08)
         net1.build(input_shape=(1, input_sidelength, input_sidelength, 4))
         net1.call(Input(shape=(input_sidelength, input_sidelength, 4)))
@@ -226,6 +227,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
                 return
 
             net1 = MyNet2()
+            net1_target = MyNet2()
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
@@ -240,6 +242,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             now_stage = 2
         else:
             net1 = MyNet2()
+            net1_target = MyNet2()
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
@@ -267,6 +270,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
                 return
 
             net1 = MyNet3()
+            net1_target = MyNet3()
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
@@ -282,6 +286,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             now_stage = 3
         else:
             net1 = MyNet3()
+            net1_target = MyNet3()
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
@@ -426,7 +431,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             b_done = [d[4] for d in minibatch]
             b_done = tf.stack(b_done, axis=0)
 
-            q_next = tf.reduce_max(net1(b_s_), axis=1)
+            q_next = tf.reduce_max(net1_target(b_s_), axis=1)
             q_truth = b_r + GAMMA * q_next* (tf.ones(32) - b_done)
 
             # 训练
@@ -450,6 +455,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
                 for ar in avg_rewards_1000steps:
                     result_file.write(str(ar) + '\n')
                 avg_rewards_1000steps = []
+                # Update the target network!!!!
+                net1_target.set_weights(net1.get_weights())
 
         # 打印信息
         if (t > OBSERVE):
