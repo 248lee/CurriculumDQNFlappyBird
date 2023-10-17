@@ -1696,3 +1696,228 @@ Total params: 3293394 (12.56 MB)
 Trainable params: 1184 (4.62 KB)
 Non-trainable params: 3292210 (12.56 MB)
 _________________________________________________________________
+Model: "my_net"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv_1 (Conv2D)             (None, 40, 40, 16)        592       
+                                                                 
+ relu_1 (Activation)         (None, 40, 40, 16)        0         
+                                                                 
+ padding_1 (MaxPooling2D)    (None, 20, 20, 16)        0         
+                                                                 
+ flatten (Flatten)           (None, 6400)              0         
+                                                                 
+ dense1 (Dense)              (None, 512)               3277312   
+                                                                 
+ dense2 (Dense)              (None, 2)                 1026      
+                                                                 
+=================================================================
+Total params: 3278930 (12.51 MB)
+Trainable params: 3278930 (12.51 MB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
+Model: "my_net"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv_1 (Conv2D)             (None, 40, 40, 16)        592       
+                                                                 
+ relu_1 (Activation)         (None, 40, 40, 16)        0         
+                                                                 
+ padding_1 (MaxPooling2D)    (None, 20, 20, 16)        0         
+                                                                 
+ flatten (Flatten)           (None, 6400)              0         
+                                                                 
+ dense1 (Dense)              (None, 512)               3277312   
+                                                                 
+ dense2 (Dense)              (None, 2)                 1026      
+                                                                 
+=================================================================
+Total params: 3278930 (12.51 MB)
+Trainable params: 3278930 (12.51 MB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
+Model: "my_net"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv_1 (Conv2D)             (None, 40, 40, 16)        592       
+                                                                 
+ relu_1 (Activation)         (None, 40, 40, 16)        0         
+                                                                 
+ padding_1 (MaxPooling2D)    (None, 20, 20, 16)        0         
+                                                                 
+ flatten (Flatten)           (None, 6400)              0         
+                                                                 
+ dense1 (Dense)              (None, 512)               3277312   
+                                                                 
+ dense2 (Dense)              (None, 2)                 1026      
+                                                                 
+=================================================================
+Total params: 3278930 (12.51 MB)
+Trainable params: 3278930 (12.51 MB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
+Model: "my_net2"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv_2 (Conv2D)             (None, 80, 80, 32)        1184      
+                                                                 
+ relu_2 (Activation)         (None, 80, 80, 32)        0         
+                                                                 
+ padding_2 (MaxPooling2D)    (None, 40, 40, 32)        0         
+                                                                 
+ conv_1 (Conv2D)             (None, 40, 40, 16)        4624      
+                                                                 
+ relu_1 (Activation)         (None, 40, 40, 16)        0         
+                                                                 
+ padding_1 (MaxPooling2D)    (None, 20, 20, 16)        0         
+                                                                 
+ flatten_1 (Flatten)         (None, 6400)              0         
+                                                                 
+ dense1 (Dense)              (None, 512)               3277312   
+                                                                 
+ dense2 (Dense)              (None, 2)                 1026      
+                                                                 
+=================================================================
+Total params: 3284146 (12.53 MB)
+Trainable params: 1184 (4.62 KB)
+Non-trainable params: 3282962 (12.52 MB)
+_________________________________________________________________
+Model: "my_net2"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv_2 (Conv2D)             (None, 80, 80, 32)        1184      
+                                                                 
+ relu_2 (Activation)         (None, 80, 80, 32)        0         
+                                                                 
+ padding_2 (MaxPooling2D)    (None, 40, 40, 32)        0         
+                                                                 
+ conv_1 (Conv2D)             (None, 40, 40, 16)        4624      
+                                                                 
+ relu_1 (Activation)         (None, 40, 40, 16)        0         
+                                                                 
+ padding_1 (MaxPooling2D)    (None, 20, 20, 16)        0         
+                                                                 
+ flatten (Flatten)           (None, 6400)              0         
+                                                                 
+ dense1 (Dense)              (None, 512)               3277312   
+                                                                 
+ dense2 (Dense)              (None, 2)                 1026      
+                                                                 
+=================================================================
+Total params: 3284146 (12.53 MB)
+Trainable params: 1184 (4.62 KB)
+Non-trainable params: 3282962 (12.52 MB)
+_________________________________________________________________
+Model: "my_net2"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv_2 (Conv2D)             (None, 80, 80, 32)        1184      
+                                                                 
+ relu_2 (Activation)         (None, 80, 80, 32)        0         
+                                                                 
+ padding_2 (MaxPooling2D)    (None, 40, 40, 32)        0         
+                                                                 
+ conv_1 (Conv2D)             (None, 40, 40, 16)        4624      
+                                                                 
+ relu_1 (Activation)         (None, 40, 40, 16)        0         
+                                                                 
+ padding_1 (MaxPooling2D)    (None, 20, 20, 16)        0         
+                                                                 
+ flatten (Flatten)           (None, 6400)              0         
+                                                                 
+ dense1 (Dense)              (None, 512)               3277312   
+                                                                 
+ dense2 (Dense)              (None, 2)                 1026      
+                                                                 
+=================================================================
+Total params: 3284146 (12.53 MB)
+Trainable params: 1184 (4.62 KB)
+Non-trainable params: 3282962 (12.52 MB)
+_________________________________________________________________
+Model: "my_net2"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv_2 (Conv2D)             (None, 80, 80, 32)        1184      
+                                                                 
+ relu_2 (Activation)         (None, 80, 80, 32)        0         
+                                                                 
+ padding_2 (MaxPooling2D)    (None, 40, 40, 32)        0         
+                                                                 
+ conv_1 (Conv2D)             (None, 40, 40, 16)        4624      
+                                                                 
+ relu_1 (Activation)         (None, 40, 40, 16)        0         
+                                                                 
+ padding_1 (MaxPooling2D)    (None, 20, 20, 16)        0         
+                                                                 
+ flatten (Flatten)           (None, 6400)              0         
+                                                                 
+ dense1 (Dense)              (None, 512)               3277312   
+                                                                 
+ dense2 (Dense)              (None, 2)                 1026      
+                                                                 
+=================================================================
+Total params: 3284146 (12.53 MB)
+Trainable params: 3284146 (12.53 MB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
+Model: "my_net3"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv_3 (Conv2D)             (None, 160, 160, 32)      1184      
+                                                                 
+ relu_3 (Activation)         (None, 160, 160, 32)      0         
+                                                                 
+ padding_3 (MaxPooling2D)    (None, 80, 80, 32)        0         
+                                                                 
+ conv_2 (Conv2D)             (None, 80, 80, 32)        9248      
+                                                                 
+ relu_2 (Activation)         (None, 80, 80, 32)        0         
+                                                                 
+ padding_2 (MaxPooling2D)    (None, 40, 40, 32)        0         
+                                                                 
+ conv_1 (Conv2D)             (None, 40, 40, 16)        4624      
+                                                                 
+ relu_1 (Activation)         (None, 40, 40, 16)        0         
+                                                                 
+ padding_1 (MaxPooling2D)    (None, 20, 20, 16)        0         
+                                                                 
+ flatten_1 (Flatten)         (None, 6400)              0         
+                                                                 
+ dense1 (Dense)              (None, 512)               3277312   
+                                                                 
+ dense2 (Dense)              (None, 2)                 1026      
+                                                                 
+=================================================================
+Total params: 3293394 (12.56 MB)
+Trainable params: 1184 (4.62 KB)
+Non-trainable params: 3292210 (12.56 MB)
+_________________________________________________________________
+Model: "my_net"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv_1 (Conv2D)             (None, 40, 40, 16)        592       
+                                                                 
+ relu_1 (Activation)         (None, 40, 40, 16)        0         
+                                                                 
+ padding_1 (MaxPooling2D)    (None, 20, 20, 16)        0         
+                                                                 
+ flatten (Flatten)           (None, 6400)              0         
+                                                                 
+ dense1 (Dense)              (None, 512)               3277312   
+                                                                 
+ dense2 (Dense)              (None, 2)                 1026      
+                                                                 
+=================================================================
+Total params: 3278930 (12.51 MB)
+Trainable params: 3278930 (12.51 MB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
