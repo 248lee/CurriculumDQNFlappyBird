@@ -103,6 +103,7 @@ class MyWindow(QWidget):
                 self.training_event.set()
 
     def run_train_network(self, stage, is_pretrained_unlock, max_steps, event : threading.Event):
+        self.check_image_modification()
         from deep_q_network import trainNetwork
         print(f"Training Network with stage={stage}, is_pretrained_unlock={is_pretrained_unlock}")
         trainNetwork(stage, is_pretrained_unlock, max_steps, event)
