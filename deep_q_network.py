@@ -384,8 +384,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
         x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
         #ret, x_t1 = cv2.threshold(x_t1, 1, 255, cv2.THRESH_BINARY)
         x_t1 = np.reshape(x_t1, (input_sidelength[1], input_sidelength[0], 1))
-        plt.imshow(x_t1, cmap='gray')
-        plt.savefig('game.png')
+        #plt.imshow(x_t1, cmap='gray')
+        #plt.savefig('game.png')
         s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
 
         s_t_D = tf.convert_to_tensor(s_t, dtype=tf.uint8)
