@@ -455,6 +455,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
                 for ar in avg_rewards_1000steps:
                     result_file.write(str(ar) + '\n')
                 avg_rewards_1000steps = []
+            if (t_train+old_time) % 10000 == 0:
                 # Update the target network!!!!
                 net1_target.set_weights(net1.get_weights())
 
