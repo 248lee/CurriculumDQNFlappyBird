@@ -14,6 +14,7 @@ import numpy as np
 from collections import deque
 import matplotlib.pyplot as plt
 import argparse
+from PyQt5.QtCore import Qt, QTimer
 os.environ['CUDA_VISIBLE_DEVICES']='0'
 
 parser = argparse.ArgumentParser()
@@ -29,7 +30,7 @@ max_num_of_steps3 = args.num_of_steps3
 isTrain = args.isTrain
 OBSERVE = args.num_of_steps_before_train # 训练前观察积累的轮数
 
-side_length_each_stage = [0, 40, 80, 160]
+side_length_each_stage = [(0, 0), (50, 30), (100, 60), (200, 120)]
 sys.path.append("game/")
 import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
@@ -202,8 +203,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
         net1 = MyNet()
         net1_target = MyNet()
         optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-5, epsilon=1e-08)
-        net1.build(input_shape=(1, input_sidelength, input_sidelength, 4))
-        net1.call(Input(shape=(input_sidelength, input_sidelength, 4)))
+        net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+        net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
         net1.summary(print_fn=myprint)
         if os.path.exists(checkpoint_save_path):
             print('-------------load the model-----------------')
@@ -217,8 +218,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
     elif stage == 2:
         if stage > now_stage:
             stage1_net = MyNet()
-            stage1_net.build(input_shape=(1, last_input_sidelength, last_input_sidelength, 4))
-            stage1_net.call(Input(shape=(last_input_sidelength, last_input_sidelength, 4)))
+            stage1_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
+            stage1_net.call(Input(shape=(last_input_sidelength[0], last_input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
                 print('-------------load the model-----------------')
                 stage1_net.load_weights(checkpoint_save_path,by_name=True)
@@ -232,9 +233,9 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
             net1.f2.trainable = is_pretrained_unlock
-            net1.build(input_shape=(1, input_sidelength, input_sidelength, 4))
+            net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage1(stage1_net)
-            net1.call(Input(shape=(input_sidelength, input_sidelength, 4)))
+            net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
             now_stage_file = open('now_stage.txt', 'w')
             now_stage_file.write("2")
@@ -247,8 +248,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
             net1.f2.trainable = is_pretrained_unlock
-            net1.build(input_shape=(1, input_sidelength, input_sidelength, 4))
-            net1.call(Input(shape=(input_sidelength, input_sidelength, 4)))
+            net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+            net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
                 print('-------------load the model-----------------')
                 net1.load_weights(checkpoint_save_path,by_name=True)
@@ -260,8 +261,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
     elif stage == 3:
         if stage > now_stage:
             stage2_net = MyNet2()
-            stage2_net.build(input_shape=(1, last_input_sidelength, last_input_sidelength, 4))
-            stage2_net.call(Input(shape=(last_input_sidelength, last_input_sidelength, 4)))
+            stage2_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
+            stage2_net.call(Input(shape=(last_input_sidelength[0], last_input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
                 print('-------------load the model-----------------')
                 stage2_net.load_weights(checkpoint_save_path,by_name=True)
@@ -276,9 +277,9 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
             net1.f2.trainable = is_pretrained_unlock
-            net1.build(input_shape=(1, input_sidelength, input_sidelength, 4))
+            net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage2(stage2_net)
-            net1.call(Input(shape=(input_sidelength, input_sidelength, 4)))
+            net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
             now_stage_file = open('now_stage.txt', 'w')
             now_stage_file.write("3")
@@ -292,8 +293,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
             net1.f2.trainable = is_pretrained_unlock
-            net1.build(input_shape=(1, input_sidelength, input_sidelength, 4))
-            net1.call(Input(shape=(input_sidelength, input_sidelength, 4)))
+            net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+            net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
                 print('-------------load the model-----------------')
                 net1.load_weights(checkpoint_save_path,by_name=True)
@@ -323,10 +324,9 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
     do_nothing = np.zeros(ACTIONS)
     do_nothing[0] = 1
     x_t, r_0, terminal, _ = game_state.frame_step(do_nothing)
-    x_t = cv2.cvtColor(cv2.resize(x_t, (input_sidelength, input_sidelength)), cv2.COLOR_RGB2GRAY)
+    x_t = cv2.cvtColor(cv2.resize(x_t, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
     #ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
     s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
-    #print(s_t.shape)
 
     rewards = []
     num_of_episode = 0
@@ -381,9 +381,11 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             f.close()
 
         a_t = np.argmax(a_t_to_game, axis=0)
-        x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (input_sidelength, input_sidelength)), cv2.COLOR_RGB2GRAY)
+        x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
         #ret, x_t1 = cv2.threshold(x_t1, 1, 255, cv2.THRESH_BINARY)
-        x_t1 = np.reshape(x_t1, (input_sidelength, input_sidelength, 1))
+        x_t1 = np.reshape(x_t1, (input_sidelength[1], input_sidelength[0], 1))
+        plt.imshow(x_t1, cmap='gray')
+        plt.savefig('game.png')
         s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
 
         s_t_D = tf.convert_to_tensor(s_t, dtype=tf.uint8)

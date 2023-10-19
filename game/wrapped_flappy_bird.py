@@ -204,7 +204,7 @@ def getRandomPipe():
     gapY += int(BASEY * 0.2) + SCREENHEIGHT * random.uniform(-0.5, 0.5)
     pipeX = SCREENWIDTH + 10
 
-    t = random.randint(0, 1)
+    t = 0#random.randint(0, 1)
 
     return [
         {'x': pipeX, 'y': gapY - PIPE_HEIGHT, 'type': t},  # upper pipe
