@@ -443,6 +443,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
                 index_b_a = tf.concat((index, b_a), axis=1)
                 q = tf.gather_nd(q_output, index_b_a)
                 loss = tf.losses.MSE(q_truth, q)
+                print(q_truth.shape)
+                print(q.shape)
                 print("loss = %f" % loss)
                 gradients = tape.gradient(loss, net1.trainable_variables)
                 optimizer.apply_gradients(zip(gradients, net1.trainable_variables))
