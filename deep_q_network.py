@@ -30,7 +30,7 @@ max_num_of_steps3 = args.num_of_steps3
 isTrain = args.isTrain
 OBSERVE = args.num_of_steps_before_train # 训练前观察积累的轮数
 
-side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
+side_length_each_stage = [(0, 0), (80, 80), (80, 80), (160, 160)]
 sys.path.append("game/")
 import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
@@ -512,6 +512,199 @@ def custom_kernel_stage3(old_net, thickness):
         tmp_stack = tmp_stack.reshape((sh[0] * sh[1], sh[2], sh[3]))
         new_kernel.append(tmp_stack)
     return (np.array(new_kernel).T)
+
+def play(stage, max_steps):
+    if OBSERVE < 1000:
+        print("--num_of_steps_before_train should be more than 1000 in order to plot rewards. This is because we'll start to plot average rewards per 1000 steps when the model starts training.")
+        return
+#============================ 模型创建与加载 ===========================================
+    t = 0 #初始化TIMESTEP
+    num_of_episodes = 0
+    total_score = 0
+    # 模型创建
+    input_sidelength = side_length_each_stage[stage]
+    last_input_sidelength = side_length_each_stage[stage - 1]
+    checkpoint_save_path = "./model/FlappyBird.h5"
+    epsilon = EPSILON
+    now_stage = 1
+    if os.path.exists('now_stage.txt'):
+        ns = open('now_stage.txt', 'r')
+        now_stage = int(ns.readline())
+        ns.close()
+    if stage == 1:
+        net1 = MyNet()
+        net1_target = MyNet()
+        optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-5, epsilon=1e-08)
+        net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+        net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
+        net1.summary(print_fn=myprint)
+        if os.path.exists(checkpoint_save_path):
+            print('-------------load the model-----------------')
+            net1.load_weights(checkpoint_save_path,by_name=True)
+        else:
+            print('-------------train new model-----------------')
+        print((net1.c1_1.get_weights())[0].shape)
+        now_stage_file = open('now_stage.txt', 'w')
+        now_stage_file.write("1")
+        now_stage_file.close()
+    elif stage == 2:
+        if stage > now_stage:
+            stage1_net = MyNet()
+            stage1_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
+            stage1_net.call(Input(shape=(last_input_sidelength[0], last_input_sidelength[1], 4)))
+            if os.path.exists(checkpoint_save_path):
+                print('-------------load the model-----------------')
+                stage1_net.load_weights(checkpoint_save_path,by_name=True)
+            else:
+                print("NO pretrained model to load! Pleast train stage1 first!")
+                return
+
+            net1 = MyNet2()
+            net1_target = MyNet2()
+            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+            net1.load_stage1(stage1_net)
+            net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
+            net1.summary(print_fn=myprint)
+            now_stage_file = open('now_stage.txt', 'w')
+            now_stage_file.write("2")
+            now_stage_file.close()
+            now_stage = 2
+        else:
+            net1 = MyNet2()
+            net1_target = MyNet2()
+            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+            net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
+            if os.path.exists(checkpoint_save_path):
+                print('-------------load the model-----------------')
+                net1.load_weights(checkpoint_save_path,by_name=True)
+            else:
+                print("NO pretrained model to load! Pleast train stage1 first!")
+                return
+            net1.summary(print_fn=myprint)
+
+    elif stage == 3:
+        if stage > now_stage:
+            stage2_net = MyNet2()
+            stage2_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
+            stage2_net.call(Input(shape=(last_input_sidelength[0], last_input_sidelength[1], 4)))
+            if os.path.exists(checkpoint_save_path):
+                print('-------------load the model-----------------')
+                stage2_net.load_weights(checkpoint_save_path,by_name=True)
+            else:
+                print("NO pretrained model to load! Pleast train stage1 first!")
+                return
+
+            net1 = MyNet3()
+            net1_target = MyNet3()
+            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+            net1.load_stage2(stage2_net)
+            net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
+            net1.summary(print_fn=myprint)
+            now_stage_file = open('now_stage.txt', 'w')
+            now_stage_file.write("3")
+            now_stage_file.close()
+            now_stage = 3
+        else:
+            net1 = MyNet3()
+            net1_target = MyNet3()
+            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+            net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
+            if os.path.exists(checkpoint_save_path):
+                print('-------------load the model-----------------')
+                net1.load_weights(checkpoint_save_path,by_name=True)
+            else:
+                print("NO pretrained model to load! Pleast train stage1 first!")
+                return
+            net1.summary(print_fn=myprint)
+
+    else:
+        print("笑死你可不可以給一個正確的 stage值阿? 阿就 1, 2, 3挑一個阿")
+        return
+    # Restore old_steps
+    if os.path.exists("last_old_time.txt"):
+      old_time_file = open("last_old_time.txt", 'r')
+      old_time = int(old_time_file.readline())
+
+#============================ 加载(搜集)数据集 ===========================================
+
+    # 打开游戏
+    game_state = game.GameState()
+    game_state.initializeGame()
+
+    # 将每一轮的观测存在D中，之后训练从D中随机抽取batch个数据训练，以打破时间连续导致的相关性，保证神经网络训练所需的随机性。
+    D = deque()
+
+    #初始化状态并且预处理图片，把连续的四帧图像作为一个输入（State）
+    do_nothing = np.zeros(ACTIONS)
+    do_nothing[0] = 1
+    x_t, r_0, terminal, _ = game_state.frame_step(do_nothing)
+    x_t = cv2.cvtColor(cv2.resize(x_t, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
+    #ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
+    s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
+
+    # 开始训练
+    score_previous_ep = 0
+    while t < max_steps:
+        if terminal:
+            total_score += score
+            num_of_episodes += 1
+        
+        # 根据输入的s_t,选择一个动作a_t
+        readout_t = net1(tf.expand_dims(tf.constant(s_t, dtype=tf.float32), 0))
+        print(readout_t)
+        a_t_to_game = np.zeros([ACTIONS])
+        action_index = 0
+
+        # 选取Q值最大的动作
+        print("-----------net choice----------------")
+        action_index = np.argmax(readout_t)
+        print("-----------index----------------")
+        print(action_index)
+        a_t_to_game[action_index] = 1
+
+        #执行这个动作并观察下一个状态以及reward
+        x_t1_colored, r_t, terminal, score = game_state.frame_step(a_t_to_game)
+        print("============== score ====================")
+        print(score)
+        if terminal:
+            total_score += score_previous_ep
+            num_of_episodes += 1
+        else:
+            score_previous_ep = score
+        rank_file_r = open("rank.txt","r")
+        best = int(rank_file_r.readline())
+        rank_file_r.close()
+        #if score_one_round >= best:
+        #    test = True
+        best_checkpoint_save_path = "./best/FlappyBird"
+        if score > best:
+            net1.save_weights(best_checkpoint_save_path)
+            rank_file_w = open("rank.txt","w")
+            rank_file_w.write("%d" % score)
+            print("********** best score updated!! *********")
+            rank_file_w.close()
+        if score >= best:
+            f = open("scores.txt","a")
+            f.write("========= %d ========== %d \n" % (t+old_time, score))
+            f.close()
+
+        a_t = np.argmax(a_t_to_game, axis=0)
+        x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
+        #ret, x_t1 = cv2.threshold(x_t1, 1, 255, cv2.THRESH_BINARY)
+        x_t1 = np.reshape(x_t1, (input_sidelength[1], input_sidelength[0], 1))
+        #plt.imshow(x_t1, cmap='gray')
+        #plt.savefig('game.png')
+        s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
+
+        # 更新状态，不断迭代
+        s_t = s_t1
+        t += 1
+    print("Total episodes: ", num_of_episodes)
+    print("Average scores per episodes: ", total_score / num_of_episodes)
 
 def main():
     trainNetwork()
