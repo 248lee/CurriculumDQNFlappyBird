@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 10000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -65,10 +65,10 @@ class GameState:
         self.pipeVelY = 2
         self.up = [True, True, True, True, True, True]
         self.playerVelY    =  0    # player's velocity along Y, default same as playerFlapped
-        self.playerMaxVelY =  7   # max vel along Y, max descend speed
+        self.playerMaxVelY =  8.5   # max vel along Y, max descend speed
         self.playerMinVelY =  -8   # min vel along Y, max ascend speed
         self.playerAccY    =   1   # players downward accleration
-        self.playerFlapAcc =  -5   # players speed on flapping
+        self.playerFlapAcc =  -6.5   # players speed on flapping
         self.playerFlapped = False # True when player flaps
 
     def initializeGame(self):
