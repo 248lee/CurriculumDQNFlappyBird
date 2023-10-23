@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 30
+FPS = 10000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -17,7 +17,7 @@ SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
 pygame.display.set_caption('Flappy Bird')
 
 IMAGES, SOUNDS, HITMASKS = flappy_bird_utils.load()
-PIPEGAPSIZE = 100 # gap between upper and lower part of pipe
+PIPEGAPSIZE = 140 # gap between upper and lower part of pipe
 BASEY = SCREENHEIGHT * 0.79
 
 PLAYER_WIDTH = IMAGES['player'][0].get_width()
@@ -46,7 +46,10 @@ class GameState:
         self.basex = 0
         self.baseShift = IMAGES['base'].get_width() - BACKGROUND_WIDTH
 
-        newPipe1 = getRandomPipe()
+        newPipe1 = [
+        {'x': SCREENWIDTH, 'y': 50 - PIPE_HEIGHT, 'type': 0},  # upper pipe
+        {'x': SCREENWIDTH, 'y': 50 + PIPEGAPSIZE, 'type': 0},  # lower pipe
+    ]
         #newPipe2 = getRandomPipe()
         self.upperPipes = [
             newPipe1[0]
@@ -59,13 +62,13 @@ class GameState:
 
         # player velocity, max velocity, downward accleration, accleration on flap
         self.pipeVelX = -2
-        self.pipeVelY = 6
+        self.pipeVelY = 2
         self.up = [True, True, True, True, True, True]
         self.playerVelY    =  0    # player's velocity along Y, default same as playerFlapped
-        self.playerMaxVelY =  10   # max vel along Y, max descend speed
+        self.playerMaxVelY =  8.5   # max vel along Y, max descend speed
         self.playerMinVelY =  -8   # min vel along Y, max ascend speed
         self.playerAccY    =   1   # players downward accleration
-        self.playerFlapAcc =  -9   # players speed on flapping
+        self.playerFlapAcc =  -6.5   # players speed on flapping
         self.playerFlapped = False # True when player flaps
 
     def initializeGame(self):
@@ -123,9 +126,12 @@ class GameState:
         
         # move uPipe1 and lPipe1 up and down
         for i in range(len(self.upperPipes)):
-            if  self.upperPipes[i]['y'] < -PIPE_HEIGHT:
+            delta = 0
+            #if self.upperPipes[i]['type'] == 1:
+                #delta = 50
+            if  self.upperPipes[i]['y'] - delta < -PIPE_HEIGHT:
                 self.up[i] = False
-            elif SCREENHEIGHT - PIPEGAPSIZE < self.lowerPipes[i]['y']:
+            elif SCREENHEIGHT - PIPEGAPSIZE < self.lowerPipes[i]['y'] + delta:
                 self.up[i] = True
             if self.up[i]:
                 self.lowerPipes[i]['y'] -= self.pipeVelY
