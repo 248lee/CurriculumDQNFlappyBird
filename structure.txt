@@ -1024,6 +1024,7 @@ Total params: 13109330 (50.01 MB)
 Trainable params: 13109330 (50.01 MB)
 Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
+<<<<<<< HEAD
 =======
 >>>>>>> parent of 4938e2f... Increase the acceleration
 Model: "my_net2"
@@ -1134,3 +1135,5 @@ Total params: 3284146 (12.53 MB)
 Trainable params: 3284146 (12.53 MB)
 Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
+=======
+>>>>>>> 7383780ce177d33ca6d2426f0d9fa96de63c6f90

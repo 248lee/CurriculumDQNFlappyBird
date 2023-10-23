@@ -1,4 +1,5 @@
 from deep_q_network import play
+<<<<<<< HEAD
 import numpy as np
 nums = []
 avgs = []
@@ -34,3 +35,6 @@ print('var: ', np.var(np_nums))
 
 
 
+=======
+play(1, 10000)
+>>>>>>> 7383780ce177d33ca6d2426f0d9fa96de63c6f90
