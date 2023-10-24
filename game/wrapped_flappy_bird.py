@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 10000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -28,6 +28,8 @@ BACKGROUND_WIDTH = IMAGES['background'].get_width()
 
 PLAYER_INDEX_GEN = cycle([0, 1, 2, 1])
 PIPEGENERATE_DELTASTEPS = 90
+IS_SIMUL = cycle([0, 1])
+
 
 def initialize_game():
     global FPSCLOCK, SCREEN, IMAGES, SOUNDS, HITMASKS
@@ -47,8 +49,8 @@ class GameState:
         self.baseShift = IMAGES['base'].get_width() - BACKGROUND_WIDTH
 
         newPipe1 = [
-        {'x': SCREENWIDTH, 'y': 50 - PIPE_HEIGHT, 'type': 0},  # upper pipe
-        {'x': SCREENWIDTH, 'y': 50 + PIPEGAPSIZE, 'type': 0},  # lower pipe
+        {'x': SCREENWIDTH, 'y': 50 - PIPE_HEIGHT, 'type': 0, 'action': 0},  # upper pipe
+        {'x': SCREENWIDTH, 'y': 50 + PIPEGAPSIZE, 'type': 0, 'action': 0},  # lower pipe
     ]
         #newPipe2 = getRandomPipe()
         self.upperPipes = [
@@ -126,19 +128,32 @@ class GameState:
         
         # move uPipe1 and lPipe1 up and down
         for i in range(len(self.upperPipes)):
-            delta = 0
-            #if self.upperPipes[i]['type'] == 1:
-                #delta = 50
-            if  self.upperPipes[i]['y'] - delta < -PIPE_HEIGHT:
-                self.up[i] = False
-            elif SCREENHEIGHT - PIPEGAPSIZE < self.lowerPipes[i]['y'] + delta:
-                self.up[i] = True
-            if self.up[i]:
-                self.lowerPipes[i]['y'] -= self.pipeVelY
-                self.upperPipes[i]['y'] -= self.pipeVelY
+            if self.upperPipes[i]['action'] == 0:
+                delta = 0
+                #if self.upperPipes[i]['type'] == 1:
+                    #delta = 50
+                if  self.upperPipes[i]['y'] - delta < -PIPE_HEIGHT:
+                    self.up[i] = False
+                elif SCREENHEIGHT - PIPEGAPSIZE < self.lowerPipes[i]['y'] + delta:
+                    self.up[i] = True
+                if self.up[i]:
+                    self.lowerPipes[i]['y'] -= self.pipeVelY
+                    self.upperPipes[i]['y'] -= self.pipeVelY
+                else:
+                    self.lowerPipes[i]['y'] += self.pipeVelY
+                    self.upperPipes[i]['y'] += self.pipeVelY
             else:
-                self.lowerPipes[i]['y'] += self.pipeVelY
-                self.upperPipes[i]['y'] += self.pipeVelY
+                # move uPipe1 and lPipe1 up and down respectively
+                if  self.lowerPipes[i]['y'] < BASEY / 2 + PIPEGAPSIZE / 2:
+                    self.up[i] = True
+                elif BASEY < self.lowerPipes[i]['y']:
+                    self.up[i] = False
+                if self.up[i]:
+                    self.lowerPipes[i]['y'] += self.pipeVelY
+                    self.upperPipes[i]['y'] -= self.pipeVelY
+                else:
+                    self.lowerPipes[i]['y'] -= self.pipeVelY
+                    self.upperPipes[i]['y'] += self.pipeVelY
         
         # move uPipe2 and lPipe2 up and down
         #if  self.upperPipes[1]['y'] < -PIPE_HEIGHT:
@@ -201,20 +216,26 @@ class GameState:
         return image_data, reward, terminal, score
 
 def getRandomPipe():
+    t = random.randint(0, 1)
+    pipeX = SCREENWIDTH + 10
     """returns a randomly generated pipe"""
+    action = next(IS_SIMUL)
+    if action == 1:
+        return [
+        {'x': pipeX, 'y': BASEY / 2 - PIPE_HEIGHT - PIPEGAPSIZE / 2, 'type': t, 'action': 1},  # upper pipe
+        {'x': pipeX, 'y': BASEY / 2 + PIPEGAPSIZE / 2, 'type': t, 'action': 1},  # lower pipe
+    ]
     # y of gap between upper and lower pipe
     gapYs = [20, 30, 40, 50, 60, 70, 80, 90]
     index = random.randint(0, len(gapYs)-1)
     gapY = gapYs[index]
 
     gapY += int(BASEY * 0.2) + SCREENHEIGHT * random.uniform(-0.5, 0.5)
-    pipeX = SCREENWIDTH + 10
 
-    t = random.randint(0, 1)
 
     return [
-        {'x': pipeX, 'y': gapY - PIPE_HEIGHT, 'type': t},  # upper pipe
-        {'x': pipeX, 'y': gapY + PIPEGAPSIZE, 'type': t},  # lower pipe
+        {'x': pipeX, 'y': gapY - PIPE_HEIGHT, 'type': t, 'action': 0},  # upper pipe
+        {'x': pipeX, 'y': gapY + PIPEGAPSIZE, 'type': t, 'action': 0},  # lower pipe
     ]
 
 
