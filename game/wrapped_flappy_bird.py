@@ -144,16 +144,16 @@ class GameState:
                     self.upperPipes[i]['y'] += self.pipeVelY
             else:
                 # move uPipe1 and lPipe1 up and down respectively
-                if  self.lowerPipes[i]['y'] < BASEY / 2 + PIPEGAPSIZE / 2:
+                if  self.lowerPipes[i]['y'] < BASEY / 2 + PIPEGAPSIZE / 2 + self.lowerPipes[i]['init_gapY']:
                     self.up[i] = True
-                elif BASEY < self.lowerPipes[i]['y']:
+                elif BASEY + self.lowerPipes[i]['init_gapY'] < self.lowerPipes[i]['y']:
                     self.up[i] = False
                 if self.up[i]:
-                    self.lowerPipes[i]['y'] += self.pipeVelY
-                    self.upperPipes[i]['y'] -= self.pipeVelY
+                    self.lowerPipes[i]['y'] += self.pipeVelY * 0
+                    self.upperPipes[i]['y'] -= self.pipeVelY * 0
                 else:
-                    self.lowerPipes[i]['y'] -= self.pipeVelY
-                    self.upperPipes[i]['y'] += self.pipeVelY
+                    self.lowerPipes[i]['y'] -= self.pipeVelY * 0
+                    self.upperPipes[i]['y'] += self.pipeVelY * 0
         
         # move uPipe2 and lPipe2 up and down
         #if  self.upperPipes[1]['y'] < -PIPE_HEIGHT:
@@ -220,19 +220,19 @@ def getRandomPipe():
     pipeX = SCREENWIDTH + 10
     """returns a randomly generated pipe"""
     action = next(IS_SIMUL)
-    if action == 1:
-        return [
-        {'x': pipeX, 'y': BASEY / 2 - PIPE_HEIGHT - PIPEGAPSIZE / 2, 'type': t, 'action': 1},  # upper pipe
-        {'x': pipeX, 'y': BASEY / 2 + PIPEGAPSIZE / 2, 'type': t, 'action': 1},  # lower pipe
-    ]
+
     # y of gap between upper and lower pipe
     gapYs = [20, 30, 40, 50, 60, 70, 80, 90]
     index = random.randint(0, len(gapYs)-1)
     gapY = gapYs[index]
-
     gapY += int(BASEY * 0.2) + SCREENHEIGHT * random.uniform(-0.5, 0.5)
 
-
+    if action == 1:
+        return [
+        {'x': pipeX, 'y': gapY - PIPE_HEIGHT, 'type': t, 'action': 1, 'init_gapY': gapY},  # upper pipe
+        {'x': pipeX, 'y': gapY + PIPEGAPSIZE, 'type': t, 'action': 1, 'init_gapY': gapY},  # lower pipe
+    ]
+    
     return [
         {'x': pipeX, 'y': gapY - PIPE_HEIGHT, 'type': t, 'action': 0},  # upper pipe
         {'x': pipeX, 'y': gapY + PIPEGAPSIZE, 'type': t, 'action': 0},  # lower pipe
