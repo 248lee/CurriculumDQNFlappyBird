@@ -333,6 +333,12 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
     avg_reward = 0
     avg_rewards_1000steps = []
     result_file = open("results.txt", 'a')
+
+    scores = []
+    avg_score = 0
+    avg_scores_1000steps = []
+    score_file = open("scores_training.txt", 'a')
+
     t_train = 0
     # 开始训练
     while True:
@@ -375,10 +381,6 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             rank_file_w.write("%d" % score)
             print("********** best score updated!! *********")
             rank_file_w.close()
-        if score >= best:
-            f = open("scores.txt","a")
-            f.write("========= %d ========== %d \n" % (t+old_time, score))
-            f.close()
 
         a_t = np.argmax(a_t_to_game, axis=0)
         x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
@@ -456,7 +458,10 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
                 old_time_file.write(str(t_train+old_time))
                 for ar in avg_rewards_1000steps:
                     result_file.write(str(ar) + '\n')
+                for ars in avg_scores_1000steps:
+                    score_file.write(str(ars) + '\n')
                 avg_rewards_1000steps = []
+                avg_scores_1000steps = []
             #if (t_train+old_time) % 10000 == 0:
                 # Update the target network!!!!
                 #net1_target.set_weights(net1.get_weights())
@@ -466,6 +471,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             print("TRAINED_TIMESTEP", (t_train+old_time), "|  ACTION", ACTIONS_NAME[action_index], "|  REWARD", r_t, \
              "|  Q_MAX %e \n" % np.max(readout_t), "| EPISODE", num_of_episode)
             rewards.append(r_t)
+            scores.append(score)
         else:
             print("OBSERVED_TIMESTEP", t, "|  ACTION", ACTIONS_NAME[action_index], "|  REWARD", r_t, \
              "|  Q_MAX %e \n" % np.max(readout_t), "| EPISODE", num_of_episode)
@@ -482,6 +488,20 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             for i in range(len(rewards) - 1000, len(rewards)):
                 tmp_new_rewards.append(rewards[i])
             rewards = tmp_new_rewards
+
+        # write score to files
+        if len(scores) >= 1000:
+            avg_score = avg_score - (scores[len(scores) - 1000] / 1000)
+            avg_score = avg_score + (scores[len(scores) - 1] / 1000)
+            avg_scores_1000steps.append(avg_score)
+        else:
+            if t > OBSERVE:
+                avg_score = avg_score + score / 1000
+        if len(scores) >= 5000: # Clean the memory of rewards
+            tmp_new_scores = []
+            for i in range(len(scores) - 1000, len(scores)):
+                tmp_new_scores.append(scores[i])
+            scores = tmp_new_scores
 
         # Count episodes
         if terminal:
@@ -644,7 +664,7 @@ def play(stage, max_steps):
     #ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
     s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
 
-    # 开始训练
+    # 开始...................玩！！！
     score_previous_ep = 0
     all_scores = []
     while t < max_steps:

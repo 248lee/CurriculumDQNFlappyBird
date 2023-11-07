@@ -183,8 +183,23 @@ class MyWindow(QWidget):
         else:
             pixmap = QPixmap('not_ready.png')
             self.image_label.setPixmap(pixmap)
+        
+        ctr = 0
+        lines = []
+        lines_sparse = []
+        if os.path.exists('scores_training.txt'):
+            file = open('scores_training.txt', 'r')
+            if os.path.getsize('scores_training.txt'):
+            # Read all lines from the file and convert them to floats
+                for line in file:
+                  lines.append(float(line.strip()))
+                  if ctr % 1000 == 0:
+                    lines_sparse.append(float(line.strip()))
+                  ctr += 1
 
-    
+                plt.plot(range(len(lines)), lines)
+                plt.savefig("score_plot.png")
+
 def main():
     app = QApplication(sys.argv)
     window = MyWindow()
