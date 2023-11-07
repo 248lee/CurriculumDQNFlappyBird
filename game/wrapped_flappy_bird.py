@@ -144,16 +144,17 @@ class GameState:
                     self.upperPipes[i]['y'] += self.pipeVelY
             else:
                 # move uPipe1 and lPipe1 up and down respectively
-                if  self.lowerPipes[i]['y'] < BASEY / 2 + PIPEGAPSIZE / 2 + self.lowerPipes[i]['init_gapY']:
+                if  self.lowerPipes[i]['y'] > BASEY / 2 + PIPEGAPSIZE / 2:
                     self.up[i] = True
-                elif BASEY + self.lowerPipes[i]['init_gapY'] < self.lowerPipes[i]['y']:
+                elif BASEY  > self.lowerPipes[i]['y']:
                     self.up[i] = False
                 if self.up[i]:
-                    self.lowerPipes[i]['y'] += self.pipeVelY * 0
-                    self.upperPipes[i]['y'] -= self.pipeVelY * 0
-                else:
+                    delta_lowerPipe = self.lowerPipes[i]['initY'] - 
                     self.lowerPipes[i]['y'] -= self.pipeVelY * 0
                     self.upperPipes[i]['y'] += self.pipeVelY * 0
+                else:
+                    self.lowerPipes[i]['y'] += self.pipeVelY * 0
+                    self.upperPipes[i]['y'] -= self.pipeVelY * 0
         
         # move uPipe2 and lPipe2 up and down
         #if  self.upperPipes[1]['y'] < -PIPE_HEIGHT:
@@ -229,8 +230,8 @@ def getRandomPipe():
 
     if action == 1:
         return [
-        {'x': pipeX, 'y': gapY - PIPE_HEIGHT, 'type': t, 'action': 1, 'init_gapY': gapY},  # upper pipe
-        {'x': pipeX, 'y': gapY + PIPEGAPSIZE, 'type': t, 'action': 1, 'init_gapY': gapY},  # lower pipe
+        {'x': pipeX, 'y': gapY - PIPE_HEIGHT, 'type': t, 'action': 1, 'initY': gapY - PIPE_HEIGHT},  # upper pipe
+        {'x': pipeX, 'y': gapY + PIPEGAPSIZE, 'type': t, 'action': 1, 'initY': gapY + PIPEGAPSIZE},  # lower pipe
     ]
     
     return [
