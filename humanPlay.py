@@ -21,7 +21,7 @@ import wrapped_flappy_bird as game
 
 game_state = game.GameState()
 while True:
-    a_t_to_game = np.zeros(2)
+    a_t_to_game = np.zeros(3)
     ispress = False
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -30,12 +30,16 @@ while True:
          
         # checking if keydown event happened or not
         if event.type == pygame.KEYDOWN:
-           
-            # if keydown event happened
-            # than printing a string to output
-            print("A key has been pressed")
-            a_t_to_game[1] = 1
-            ispress = True
+            if event.key == pygame.K_SPACE:
+                # if keydown event happened
+                # than printing a string to output
+                print("A key has been pressed")
+                a_t_to_game[1] = 1
+                ispress = True
+            elif event.key == pygame.K_0:
+                print("FIRE!!!")
+                a_t_to_game[2] = 1
+                ispress = True
     
     if ispress == False:
         a_t_to_game[0] = 1
