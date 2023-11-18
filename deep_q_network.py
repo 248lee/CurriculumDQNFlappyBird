@@ -35,8 +35,8 @@ sys.path.append("game/")
 import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
 GAME = 'FlappyBird' # 游戏名称
-ACTIONS = 2 # 2个动作数量
-ACTIONS_NAME=['不动','起飞']  #动作名
+ACTIONS = 3 # 3个动作数量
+ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
 REPLAY_MEMORY = 50000 # 观测存储器D的容量
