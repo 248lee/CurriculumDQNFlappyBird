@@ -15,6 +15,12 @@ def load():
     PIPE_PATH = 'assets/sprites/pipe-green.png'
     PIPE_PATH2 = 'assets/sprites/pipe-green2.png'
 
+    # path of bullet
+    BULLET_PATH = 'assets/sprites/bullet2.png'
+
+    # path of redline
+    REDLINE_PATH = 'assets/sprites/redline.png'
+
     IMAGES, SOUNDS, HITMASKS = {}, {}, {}
 
     # numbers sprites for score display
@@ -68,6 +74,9 @@ def load():
         pygame.image.load(PIPE_PATH2).convert_alpha(),
     )
 
+    IMAGES['bullet'] = pygame.image.load(BULLET_PATH).convert_alpha()
+    IMAGES['redline'] = pygame.image.load(REDLINE_PATH).convert_alpha()
+
     # hismask for pipes
     HITMASKS['pipe'] = (
         getHitmask(IMAGES['pipe'][0]),
@@ -85,6 +94,9 @@ def load():
         getHitmask(IMAGES['player'][2]),
     )
 
+    HITMASKS['special_pipe'] = getSpecialHitmask(IMAGES['pipe'][0])
+    HITMASKS['bullet'] = getHitmask(IMAGES['bullet'])
+
     return IMAGES, SOUNDS, HITMASKS
 
 def getHitmask(image):
@@ -94,4 +106,12 @@ def getHitmask(image):
         mask.append([])
         for y in range(image.get_height()):
             mask[x].append(bool(image.get_at((x,y))[3]))
+    return mask
+
+def getSpecialHitmask(pipe_image):
+    mask = []
+    for x in range(pipe_image.get_width()):
+        mask.append([])
+        for y in range(2 * pipe_image.get_height()):
+            mask[x].append(True)
     return mask
