@@ -17,18 +17,18 @@ import argparse
 from PyQt5.QtCore import Qt, QTimer
 os.environ['CUDA_VISIBLE_DEVICES']='0'
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--isTrain', type=bool, default=True)
-parser.add_argument('--num_of_steps', type=int, default=1000)
-parser.add_argument('--num_of_steps2', type=int, default=1000)
-parser.add_argument('--num_of_steps3', type=int, default=1000)
-parser.add_argument('--num_of_steps_before_train', type=int, default=10000)
-args = parser.parse_args()
-max_num_of_steps = args.num_of_steps
-max_num_of_steps2 = args.num_of_steps2
-max_num_of_steps3 = args.num_of_steps3
-isTrain = args.isTrain
-OBSERVE = args.num_of_steps_before_train # 训练前观察积累的轮数
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--isTrain', type=bool, default=True)
+# parser.add_argument('--num_of_steps', type=int, default=1000)
+# parser.add_argument('--num_of_steps2', type=int, default=1000)
+# parser.add_argument('--num_of_steps3', type=int, default=1000)
+# parser.add_argument('--num_of_steps_before_train', type=int, default=10000)
+# args = parser.parse_args()
+# max_num_of_steps = args.num_of_steps
+# max_num_of_steps2 = args.num_of_steps2
+# max_num_of_steps3 = args.num_of_steps3
+# isTrain = args.isTrain
+OBSERVE = 10000 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (30, 30), (60, 60), (120, 120)]
 sys.path.append("game/")
