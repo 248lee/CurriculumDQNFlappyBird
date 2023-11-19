@@ -192,18 +192,9 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
     if is_colab:
         import datetime
         current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
+        train_log_dir = 'logs/gradient_tape/curriculum/train'
         train_summary_writer = tf.summary.create_file_writer(train_log_dir)
-        if os.path.exists('results.txt'):
-            file = open('results.txt', 'r')
-            if os.path.getsize('results.txt'):
-                # Read all lines from the file and convert them to floats
-                ctr = 0
-                for line in file:
-                    with train_summary_writer.as_default():
-                        tf.summary.scalar('reward', float(line.strip()), step=ctr)
-                    ctr += 1
-            file.close()
+        
 #============================ 模型创建与加载 ===========================================
     old_time = 0 # Python is trash
     t = 0 #初始化TIMESTEP
@@ -255,7 +246,6 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             net1.load_stage1(stage1_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
-            now_stage = 2
         else:
             net1 = MyNet2()
             net1_target = MyNet2()
@@ -296,7 +286,6 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             net1.load_stage2(stage2_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
-            now_stage = 3
         else:
             net1 = MyNet3()
             net1_target = MyNet3()
@@ -464,9 +453,6 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 index_b_a = tf.concat((index, b_a), axis=1)
                 q = tf.gather_nd(q_output, index_b_a)
                 loss = tf.losses.MSE(q_truth, q)
-                if is_colab:
-                    with train_summary_writer.as_default():
-                        tf.summary.scalar('loss', loss, step=t_train+old_time)
                 print("loss = %f" % loss)
                 gradients = tape.gradient(loss, net1.trainable_variables)
                 optimizer.apply_gradients(zip(gradients, net1.trainable_variables))
@@ -502,6 +488,9 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             avg_reward = avg_reward - (rewards[len(rewards) - 1000] / 1000)
             avg_reward = avg_reward + (rewards[len(rewards) - 1] / 1000)
             avg_rewards_1000steps.append(avg_reward)
+            if is_colab:
+              with train_summary_writer.as_default():
+                tf.summary.scalar('reward', avg_reward, step=len(avg_rewards_1000steps))
         else:
             if t > OBSERVE:
                 avg_reward = avg_reward + r_t / 1000
@@ -516,6 +505,9 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             avg_score = avg_score - (scores[len(scores) - 1000] / 1000)
             avg_score = avg_score + (scores[len(scores) - 1] / 1000)
             avg_scores_1000steps.append(avg_score)
+            if is_colab:
+              with train_summary_writer.as_default():
+                tf.summary.scalar('scores', avg_score, step=len(avg_scores_1000steps))
         else:
             if t > OBSERVE:
                 avg_score = avg_score + score / 1000
