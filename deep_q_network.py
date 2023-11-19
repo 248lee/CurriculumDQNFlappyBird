@@ -182,10 +182,26 @@ def myprint(s):
     with open('structure.txt','a') as f:
         print(s, file=f)
 
-def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
+def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=False):
     if OBSERVE < 1000:
         print("--num_of_steps_before_train should be more than 1000 in order to plot rewards. This is because we'll start to plot average rewards per 1000 steps when the model starts training.")
         return
+    
+    if is_colab:
+        import datetime
+        current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
+        train_summary_writer = tf.summary.create_file_writer(train_log_dir)
+        if os.path.exists('results.txt'):
+            file = open('results.txt', 'r')
+            if os.path.getsize('results.txt'):
+                # Read all lines from the file and convert them to floats
+                ctr = 0
+                for line in file:
+                    with train_summary_writer.as_default():
+                        tf.summary.scalar('reward', float(line.strip()), step=ctr)
+                    ctr += 1
+            file.close()
 #============================ 模型创建与加载 ===========================================
     old_time = 0 # Python is trash
     t = 0 #初始化TIMESTEP
@@ -237,9 +253,6 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             net1.load_stage1(stage1_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
-            now_stage_file = open('now_stage.txt', 'w')
-            now_stage_file.write("2")
-            now_stage_file.close()
             now_stage = 2
         else:
             net1 = MyNet2()
@@ -281,9 +294,6 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
             net1.load_stage2(stage2_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
-            now_stage_file = open('now_stage.txt', 'w')
-            now_stage_file.write("3")
-            now_stage_file.close()
             now_stage = 3
         else:
             net1 = MyNet3()
@@ -410,6 +420,13 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
 
         # 观测一定轮数后开始训练
         if (t > OBSERVE):
+            # Start training! Therefore we update the now_stage file
+            if now_stage != stage:
+                now_stage_file = open('now_stage.txt', 'w')
+                now_stage_file.write(str(stage))
+                now_stage_file.close()
+                now_stage = stage
+            
             t_train += 1
             # 随机抽取minibatch个数据训练
             print("==================start train====================")
@@ -445,6 +462,9 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event : Event):
                 index_b_a = tf.concat((index, b_a), axis=1)
                 q = tf.gather_nd(q_output, index_b_a)
                 loss = tf.losses.MSE(q_truth, q)
+                if is_colab:
+                    with train_summary_writer.as_default():
+                        tf.summary.scalar('loss', loss, step=t_train+old_time)
                 print("loss = %f" % loss)
                 gradients = tape.gradient(loss, net1.trainable_variables)
                 optimizer.apply_gradients(zip(gradients, net1.trainable_variables))
@@ -562,9 +582,6 @@ def play(stage, max_steps):
         else:
             print('-------------train new model-----------------')
         print((net1.c1_1.get_weights())[0].shape)
-        now_stage_file = open('now_stage.txt', 'w')
-        now_stage_file.write("1")
-        now_stage_file.close()
     elif stage == 2:
         if stage > now_stage:
             stage1_net = MyNet()
@@ -584,9 +601,6 @@ def play(stage, max_steps):
             net1.load_stage1(stage1_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
-            now_stage_file = open('now_stage.txt', 'w')
-            now_stage_file.write("2")
-            now_stage_file.close()
             now_stage = 2
         else:
             net1 = MyNet2()
@@ -621,9 +635,6 @@ def play(stage, max_steps):
             net1.load_stage2(stage2_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
-            now_stage_file = open('now_stage.txt', 'w')
-            now_stage_file.write("3")
-            now_stage_file.close()
             now_stage = 3
         else:
             net1 = MyNet3()
