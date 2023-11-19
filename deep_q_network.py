@@ -14,7 +14,6 @@ import numpy as np
 from collections import deque
 import matplotlib.pyplot as plt
 import argparse
-from PyQt5.QtCore import Qt, QTimer
 os.environ['CUDA_VISIBLE_DEVICES']='0'
 
 # parser = argparse.ArgumentParser()
@@ -183,10 +182,13 @@ def myprint(s):
         print(s, file=f)
 
 def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=False):
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Ask the tensorflow to shut up. IF you disable this, a bunch of logs from tensorflow will put you down when you're using colab.
+    tf.debugging.set_log_device_placement(False)
     if OBSERVE < 1000:
         print("--num_of_steps_before_train should be more than 1000 in order to plot rewards. This is because we'll start to plot average rewards per 1000 steps when the model starts training.")
         return
-    
+    if not is_colab:
+      from PyQt5.QtCore import Qt, QTimer
     if is_colab:
         import datetime
         current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
