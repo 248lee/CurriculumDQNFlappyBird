@@ -142,6 +142,7 @@ class GameState:
 
         if input_actions[2] == 1:
             if (not self.is_bullet_fired) and (not self.is_over_redline):
+                reward -= 0.5
                 self.bulletx = self.playerx
             self.is_bullet_fired = True
             delta = 5
