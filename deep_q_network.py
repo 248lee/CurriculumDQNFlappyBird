@@ -344,12 +344,11 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
     num_of_episode = 0
     avg_reward = 0
     avg_rewards_1000steps = []
-    result_file = open("results.txt", 'a')
+    
 
     scores = []
     avg_score = 0
     avg_scores_1000steps = []
-    score_file = open("scores_training.txt", 'a')
 
     t_train = 0
     # 开始训练
@@ -478,10 +477,14 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 # store the old_time variable
                 old_time_file = open("last_old_time.txt", 'w')
                 old_time_file.write(str(t_train+old_time))
+                result_file = open("results.txt", 'a')
                 for ar in avg_rewards_1000steps:
                     result_file.write(str(ar) + '\n')
+                result_file.close()
+                score_file = open("scores_training.txt", 'a')
                 for ars in avg_scores_1000steps:
                     score_file.write(str(ars) + '\n')
+                score_file.close()
                 avg_rewards_1000steps = []
                 avg_scores_1000steps = []
             #if (t_train+old_time) % 10000 == 0:
