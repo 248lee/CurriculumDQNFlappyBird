@@ -142,11 +142,10 @@ class GameState:
 
         if input_actions[2] == 1:
             if (not self.is_bullet_fired) and (not self.is_over_redline):
-                reward -= 0.5
                 self.bulletx = self.playerx
-            self.is_bullet_fired = True
-            delta = 5
-            self.bullety = self.playery + delta
+                self.is_bullet_fired = True
+                delta = 5
+                self.bullety = self.playery + delta
 
         # check for score
         playerMidPos = self.playerx + PLAYER_WIDTH / 2
@@ -292,6 +291,7 @@ class GameState:
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
                     uPipe['freeze'] = True
+                    
             elif self.is_bullet_fired and uPipe['action'] == 0:
                 # upper and lower pipe rects
                 uPipeRect = pygame.Rect(uPipe['x'], uPipe['y'], PIPE_WIDTH, PIPE_HEIGHT)
