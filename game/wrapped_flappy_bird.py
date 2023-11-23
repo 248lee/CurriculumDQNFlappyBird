@@ -290,7 +290,7 @@ class GameState:
                 pipeRect = pygame.Rect(uPipe['x'], 0, PIPE_WIDTH, SCREENHEIGHT)
                 pipeMask = HITMASKS['special_pipe']
                 if pixelCollision(bulletRect, pipeRect, bulletMask, pipeMask):
-                    reward = (lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY
+                    reward = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY) * 6
                     print("Big enough? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
@@ -306,7 +306,7 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
-                    reward = -.5
+                    reward = -.1
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
