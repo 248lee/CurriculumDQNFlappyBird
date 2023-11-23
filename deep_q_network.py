@@ -190,6 +190,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
     if not is_colab:
       from PyQt5.QtCore import Qt, QTimer
     if is_colab:
+        sys.stdout = open(os.devnull, 'w')
         import datetime
         current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         train_log_dir = 'logs/gradient_tape/curriculum/train'
