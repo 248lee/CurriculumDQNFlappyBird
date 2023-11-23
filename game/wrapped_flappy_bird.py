@@ -142,19 +142,21 @@ class GameState:
 
         if input_actions[2] == 1:
             if (not self.is_bullet_fired) and (not self.is_over_redline):
+                reward -= 0.5
                 self.bulletx = self.playerx
-                self.is_bullet_fired = True
-                delta = 5
-                self.bullety = self.playery + delta
+            self.is_bullet_fired = True
+            delta = 5
+            self.bullety = self.playery + delta
 
         # check for score
         playerMidPos = self.playerx + PLAYER_WIDTH / 2
         for pipe in self.upperPipes:
             pipeMidPos = pipe['x'] + PIPE_WIDTH / 2
-            if pipeMidPos <= playerMidPos < pipeMidPos + 4:
+            if pipeMidPos <= playerMidPos < pipeMidPos + 2:
                 self.score += 1
                 #SOUNDS['point'].play() #disable it if you do not need sound
                 reward = 1
+                print("Good! reward: ", reward)
 
         # playerIndex basex change
         if (self.loopIter + 1) % 3 == 0:
@@ -288,10 +290,11 @@ class GameState:
                 pipeRect = pygame.Rect(uPipe['x'], 0, PIPE_WIDTH, SCREENHEIGHT)
                 pipeMask = HITMASKS['special_pipe']
                 if pixelCollision(bulletRect, pipeRect, bulletMask, pipeMask):
+                    reward = (lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY
+                    print("Big enough? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
                     uPipe['freeze'] = True
-                    
             elif self.is_bullet_fired and uPipe['action'] == 0:
                 # upper and lower pipe rects
                 uPipeRect = pygame.Rect(uPipe['x'], uPipe['y'], PIPE_WIDTH, PIPE_HEIGHT)
@@ -303,6 +306,8 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
+                    reward = -.5
+                    print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
 
@@ -328,7 +333,7 @@ class GameState:
 
         SCREEN.blit(IMAGES['base'], (self.basex, BASEY))
         # print score so player overlaps the score
-        showScore(self.score)
+        # showScore(self.score)
         SCREEN.blit(IMAGES['player'][self.playerIndex],
                     (self.playerx, self.playery))
 
