@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 30
+FPS = 10000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -147,15 +147,7 @@ class GameState:
             delta = 5
             self.bullety = self.playery + delta
 
-        # check for score
-        playerMidPos = self.playerx + PLAYER_WIDTH / 2
-        for pipe in self.upperPipes:
-            pipeMidPos = pipe['x'] + PIPE_WIDTH / 2
-            if pipeMidPos <= playerMidPos < pipeMidPos + 2:
-                self.score += 1
-                #SOUNDS['point'].play() #disable it if you do not need sound
-                reward = 1
-                print("Good! reward: ", reward)
+        
 
         # playerIndex basex change
         if (self.loopIter + 1) % 3 == 0:
@@ -340,6 +332,16 @@ class GameState:
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         pygame.display.update()
         FPSCLOCK.tick(FPS)
+
+        # check for score
+        playerMidPos = self.playerx + PLAYER_WIDTH / 2
+        for pipe in self.upperPipes:
+            pipeMidPos = pipe['x'] + PIPE_WIDTH / 2
+            if pipeMidPos <= playerMidPos < pipeMidPos + 2:
+                self.score += 1
+                #SOUNDS['point'].play() #disable it if you do not need sound
+                reward = 1
+                print("Good! reward: ", reward)
         score = self.score
         #print self.upperPipes[0]['y'] + PIPE_HEIGHT - int(BASEY * 0.2)
         return image_data, reward, terminal, score
