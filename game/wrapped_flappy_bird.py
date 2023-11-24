@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 10000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -142,7 +142,6 @@ class GameState:
 
         if input_actions[2] == 1:
             if (not self.is_bullet_fired) and (not self.is_over_redline):
-                reward -= 0.5
                 self.bulletx = self.playerx
             self.is_bullet_fired = True
             delta = 5
@@ -174,8 +173,9 @@ class GameState:
             self.playery = 0
 
         # bullet's movement
-        if self.bulletx > SCREENWIDTH + 20:
+        if self.bulletx > SCREENWIDTH + 7:
             self.is_bullet_fired = False
+            reward=-0.6
         if self.is_bullet_fired:
             self.bulletx += self.bullet_speedX
 
@@ -290,7 +290,7 @@ class GameState:
                 pipeRect = pygame.Rect(uPipe['x'], 0, PIPE_WIDTH, SCREENHEIGHT)
                 pipeMask = HITMASKS['special_pipe']
                 if pixelCollision(bulletRect, pipeRect, bulletMask, pipeMask):
-                    reward = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY) * 6
+                    reward = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY) * 1.6
                     print("Big enough? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
@@ -306,7 +306,7 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
-                    reward = -.1
+                    reward = -.6
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
