@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 30
+FPS = 10000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -140,7 +140,7 @@ class GameState:
                 self.playerFlapped = True
                 #SOUNDS['wing'].play() #disable it if you do not need sound
 
-        if input_actions[2] == 1:
+        if (input_actions.size) >= 3 and input_actions[2] == 1:
             if (not self.is_bullet_fired) and (not self.is_over_redline):
                 self.bulletx = self.playerx
             self.is_bullet_fired = True
