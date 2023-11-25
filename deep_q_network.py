@@ -29,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # isTrain = args.isTrain
 OBSERVE = 10000 # 训练前观察积累的轮数
 
-side_length_each_stage = [(0, 0), (30, 30), (60, 60), (120, 120)]
+side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
 import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
@@ -443,7 +443,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             b_done = [d[4] for d in minibatch]
             b_done = tf.stack(b_done, axis=0)
 
-            q_next = tf.reduce_max(net1(b_s_), axis=1)
+            q_next = tf.reduce_max(net1_target(b_s_), axis=1)
             q_truth = b_r + GAMMA * q_next* (tf.ones(32) - b_done)
 
             # 训练
@@ -474,9 +474,9 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 score_file.close()
                 avg_rewards_1000steps = []
                 avg_scores_1000steps = []
-            #if (t_train+old_time) % 10000 == 0:
+            if (t_train+old_time) % 20000 == 0:
                 # Update the target network!!!!
-                #net1_target.set_weights(net1.get_weights())
+                net1_target.set_weights(net1.get_weights())
 
         # 打印信息
         if (t > OBSERVE):
