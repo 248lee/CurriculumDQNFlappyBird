@@ -34,7 +34,8 @@ sys.path.append("game/")
 import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
 GAME = 'FlappyBird' # 游戏名称
-ACTIONS = 2 # 3个动作数量
+ACTIONS_1 = 2
+ACTIONS = 3 # 3个动作数量
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
@@ -56,7 +57,7 @@ class MyNet(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = Dense(ACTIONS, activation=None, name='dense2',
+        self.f2 = Dense(ACTIONS_1, activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
 
@@ -112,9 +113,10 @@ class MyNet2(Model):
         return y
     def load_stage1(self, stage1_net):
         new_kernel = custom_kernel_stage2(stage1_net, self.conv2_num_of_filters // 4)
+        new_fc, new_bias = custom_dense(stage1_net, stage2_net=self)
         self.c1_1.set_weights([new_kernel, stage1_net.c1_1.get_weights()[1]])
         self.f1.set_weights([stage1_net.f1.get_weights()[0], stage1_net.f1.get_weights()[1]])
-        self.f2.set_weights([stage1_net.f2.get_weights()[0], stage1_net.f2.get_weights()[1]])
+        self.f2.set_weights([new_fc, new_bias])
         return
     
 class MyNet3(Model):
@@ -474,7 +476,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 score_file.close()
                 avg_rewards_1000steps = []
                 avg_scores_1000steps = []
-            if (t_train+old_time) % 20000 == 0:
+            if (t_train+old_time) % 1000 == 0:
                 # Update the target network!!!!
                 net1_target.set_weights(net1.get_weights())
 
@@ -537,6 +539,19 @@ def custom_kernel_stage2(old_net, thickness):
         tmp_stack = tmp_stack.reshape((sh[0] * sh[1], sh[2], sh[3]))
         new_kernel.append(tmp_stack)
     return (np.array(new_kernel).T)
+
+def custom_dense(stage1_net, stage2_net):
+  old_fc = stage1_net.f2.get_weights()[0]
+  new_fc = stage2_net.f2.get_weights()[0]
+  for i in range(old_fc.shape[0]):
+    for j in range(old_fc.shape[1]):
+      new_fc[i][j] = old_fc[i][j]
+  old_bias = stage1_net.f2.get_weights()[1]
+  new_bias = stage2_net.f2.get_weights()[1]
+  for i in range(old_bias.shape[0]):
+    new_bias[i] = old_bias[i]
+  
+  return new_fc, new_bias
 
 def custom_kernel_stage3(old_net, thickness):
     old_kernel = old_net.c2_1.get_weights()[0].T
