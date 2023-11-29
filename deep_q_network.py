@@ -35,6 +35,7 @@ import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
 GAME = 'FlappyBird' # 游戏名称
 ACTIONS = 2 # 3个动作数量
+ACTIONS_2 = 3
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
@@ -94,7 +95,7 @@ class MyNet2(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = Dense(ACTIONS, activation=None, name='dense2',
+        self.f2 = Dense(ACTIONS_2, activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
     def call(self, x):
