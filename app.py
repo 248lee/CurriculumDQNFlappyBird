@@ -1,8 +1,8 @@
 import sys
 import threading
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QComboBox, QPushButton, QCheckBox, QLineEdit, QMessageBox
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QCheckBox, QLineEdit, QMessageBox, QRadioButton
+from PyQt5.QtGui import QPixmap, QMovie
+from PyQt5.QtCore import Qt, QTimer, QRect, QSize
 import os
 from time import sleep
 import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ class MyWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.selected_stage = None
     
     def initUI(self):
         self.setWindowTitle('Network Training App')
@@ -18,10 +19,18 @@ class MyWindow(QWidget):
 
         # Create widgets
         self.stage_label = QLabel('Select Stage:')
-        self.stage_combo = QComboBox()
-        self.stage_combo.addItem('1')
-        self.stage_combo.addItem('2')
-        self.stage_combo.addItem('3')
+        # Create three radio buttons for stages
+        self.stage_buttons = []
+        for stage in range(1, 4):
+            radio_button = QRadioButton(f'Stage {stage}')
+            self.stage_buttons.append(radio_button)        
+
+        buttons_layout = QHBoxLayout()
+        for button in self.stage_buttons:
+            buttons_layout.addWidget(button)
+        # Set the default checked state for the first radio button
+        self.stage_buttons[0].setChecked(True)
+        self.selected_stage = 1  
 
         self.pretrained_checkbox = QCheckBox('Is Pretrained Unlock')
 
@@ -38,23 +47,37 @@ class MyWindow(QWidget):
         pixmap = QPixmap('not_ready.png')
         self.image_label.setPixmap(pixmap)
 
+        # GIF display
+        self.gif_label = QLabel(self)
+        self.gif_label.setGeometry(QRect(25, 25, 200, 200))
+        self.gif_label.setMinimumSize(QSize(200, 200))
+        self.gif_label.setMaximumSize(QSize(200, 200))
+        self.gif_label.setObjectName('/media/caotun8plus9/linux_drive/output.gif')
+        self.movie = QMovie('/media/caotun8plus9/linux_drive/output.gif')
+        self.gif_label.setMovie(self.movie)
+        self.movie.start()
+        
+
         # Display the integer from the file
         self.last_old_time_label = QLabel(f'# of Already Trained Steps (Updated per 100 secs): {self.read_last_old_time()}')
         # Create layout
         layout = QVBoxLayout()
+        layout.addWidget(self.image_label) 
         layout.addWidget(self.stage_label)
-        layout.addWidget(self.stage_combo)
+        layout.addLayout(buttons_layout)
         layout.addWidget(self.pretrained_checkbox)
         layout.addWidget(self.max_steps_label)
         layout.addWidget(self.max_steps_input)
         layout.addWidget(self.train_button)
         layout.addWidget(self.train_new_button)
         layout.addWidget(self.last_old_time_label)
-        layout.addWidget(self.image_label) 
+        layout.addWidget(self.gif_label)
+        self.gif_label.move(self.gif_label.x() + 500, self.gif_label.y() - 500)
         self.setLayout(layout)
 
         # Connect the button click event to the function
-        self.stage_combo.currentIndexChanged.connect(self.update_button_state)
+        for button in self.stage_buttons:
+            button.toggled.connect(self.update_button_state)
         self.train_button.clicked.connect(self.toggle_train_network)
         self.train_new_button.clicked.connect(self.confirm_train_new_network)
 
@@ -74,8 +97,10 @@ class MyWindow(QWidget):
 
     def toggle_train_network(self):
         if not self.is_training:
+            self.update_button_state()
             # Start training
-            stage = int(self.stage_combo.currentText())
+            stage = self.selected_stage
+            print("stage: ", stage)
             now_stage_file = open('now_stage.txt', 'r')
             now_stage = int(now_stage_file.readline())
             if now_stage > stage:
@@ -133,9 +158,16 @@ class MyWindow(QWidget):
         sleep(5)
         self.toggle_train_network()
     
-    def update_button_state(self, index):
+    def update_button_state(self):
         # Update the state of the "Train New Network" button based on the selected stage
-        if index != 0 :
+        self.selected_stage = None
+        for index, button in enumerate(self.stage_buttons):
+            if button.isChecked():
+                self.selected_stage = index + 1
+                break
+        print(self.selected_stage, "\n\n\n\n")
+
+        if self.selected_stage is not None and self.selected_stage != 1:
             self.train_new_button.setEnabled(False)
         else:
             self.train_new_button.setEnabled(True)
