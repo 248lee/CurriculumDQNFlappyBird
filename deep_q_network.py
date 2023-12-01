@@ -35,7 +35,8 @@ sys.path.append("game/")
 import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
 GAME = 'FlappyBird' # 游戏名称
-ACTIONS = 2
+ACTIONS_1 = 2
+ACTIONS_2 = 3
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
@@ -57,7 +58,7 @@ class MyNet(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = LockedWeightsDense(ACTIONS, locked_neurons=[0, 1], activation=None, name='dense2',
+        self.f2 = LockedWeightsDense(ACTIONS_1, locked_neurons=[0, 1], activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
 
@@ -95,7 +96,7 @@ class MyNet2(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = Dense(ACTIONS, activation=None, name='dense2',
+        self.f2 = Dense(ACTIONS_2, activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
     def call(self, x):
@@ -151,7 +152,7 @@ class MyNet3(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = Dense(ACTIONS, activation=None, name='dense2',
+        self.f2 = Dense(ACTIONS_2, activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
         
@@ -184,6 +185,7 @@ def myprint(s):
         print(s, file=f)
 
 def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=False):
+    num_of_actions = ACTIONS_1
     neuron = open("neurons.txt", 'w')
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Ask the tensorflow to shut up. IF you disable this, a bunch of logs from tensorflow will put you down when you're using colab.
     tf.debugging.set_log_device_placement(False)
@@ -229,6 +231,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
         now_stage_file.write("1")
         now_stage_file.close()
     elif stage == 2:
+        num_of_actions = ACTIONS_2
         if stage > now_stage:
             stage1_net = MyNet()
             stage1_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -241,7 +244,6 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 return
 
             # Now add one more action
-            ACTIONS = 3
             net1 = MyNet2()
             net1_target = MyNet2()
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
@@ -253,7 +255,6 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
         else:
-            ACTIONS = 3
             net1 = MyNet2()
             net1_target = MyNet2()
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
@@ -271,7 +272,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             net1.summary(print_fn=myprint)
 
     elif stage == 3:
-        ACTIONS = 3
+        num_of_actions = ACTIONS_2
         if stage > now_stage:
             stage2_net = MyNet2()
             stage2_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -332,7 +333,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
     D = deque()
 
     #初始化状态并且预处理图片，把连续的四帧图像作为一个输入（State）
-    do_nothing = np.zeros(ACTIONS)
+    do_nothing = np.zeros(num_of_actions)
     do_nothing[0] = 1
     x_t, r_0, terminal, _ = game_state.frame_step(do_nothing)
     x_t = cv2.cvtColor(cv2.resize(x_t, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
@@ -364,13 +365,13 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
         
         readout_t = net1(tf.expand_dims(tf.constant(s_t, dtype=tf.float32), 0))
         print(readout_t)
-        a_t_to_game = np.zeros([ACTIONS])
+        a_t_to_game = np.zeros([num_of_actions])
         action_index = 0
 
         #贪婪策略，有episilon的几率随机选择动作去探索，否则选取Q值最大的动作
         if random.random() <= epsilon:
             print("----------Random Action----------")
-            action_index = random.randrange(ACTIONS)
+            action_index = random.randrange(num_of_actions)
             a_t_to_game[action_index] = 1
         else:
             print("-----------net choice----------------")
@@ -581,6 +582,7 @@ def custom_kernel_stage3(old_net, thickness):
     return (np.array(new_kernel).T)
 
 def play(stage, max_steps):
+    num_of_actions = ACTIONS_1
     if OBSERVE < 1000:
         print("--num_of_steps_before_train should be more than 1000 in order to plot rewards. This is because we'll start to plot average rewards per 1000 steps when the model starts training.")
         return
@@ -612,6 +614,7 @@ def play(stage, max_steps):
             print('-------------train new model-----------------')
         print((net1.c1_1.get_weights())[0].shape)
     elif stage == 2:
+        num_of_actions = ACTIONS_2
         if stage > now_stage:
             stage1_net = MyNet()
             stage1_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -646,6 +649,7 @@ def play(stage, max_steps):
             net1.summary(print_fn=myprint)
 
     elif stage == 3:
+        num_of_actions = ACTIONS_2
         if stage > now_stage:
             stage2_net = MyNet2()
             stage2_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -697,7 +701,7 @@ def play(stage, max_steps):
     D = deque()
 
     #初始化状态并且预处理图片，把连续的四帧图像作为一个输入（State）
-    do_nothing = np.zeros(ACTIONS)
+    do_nothing = np.zeros(num_of_actions)
     do_nothing[0] = 1
     x_t, r_0, terminal, _ = game_state.frame_step(do_nothing)
     x_t = cv2.cvtColor(cv2.resize(x_t, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
@@ -711,7 +715,7 @@ def play(stage, max_steps):
         # 根据输入的s_t,选择一个动作a_t
         readout_t = net1(tf.expand_dims(tf.constant(s_t, dtype=tf.float32), 0))
         print(readout_t)
-        a_t_to_game = np.zeros([ACTIONS])
+        a_t_to_game = np.zeros([num_of_actions])
         action_index = 0
 
         # 选取Q值最大的动作
