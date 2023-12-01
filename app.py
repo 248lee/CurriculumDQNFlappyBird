@@ -45,15 +45,19 @@ class MyWindow(QWidget):
         self.image_label = QLabel(self)
         self.image_label.setAlignment(Qt.AlignCenter)
         pixmap = QPixmap('not_ready.png')
+        pixmap = pixmap.scaled(100, 100)
         self.image_label.setPixmap(pixmap)
 
         # GIF display
         self.gif_label = QLabel(self)
-        self.gif_label.setGeometry(QRect(25, 25, 200, 200))
-        self.gif_label.setMinimumSize(QSize(200, 200))
-        self.gif_label.setMaximumSize(QSize(200, 200))
+        self.gif_label.setAlignment(Qt.AlignCenter)
+        #self.gif_label.setGeometry(QRect(0, 0, 200, 200))
+        #self.gif_label.setMinimumSize(QSize(640, 360))
+        #self.gif_label.setMaximumSize(QSize(640, 360))
+        self.gif_label.setScaledContents(True) 
         self.gif_label.setObjectName('/media/caotun8plus9/linux_drive/output.gif')
         self.movie = QMovie('/media/caotun8plus9/linux_drive/output.gif')
+        #self.gif_label.setStyleSheet('position: absolute;left: 500;border: 3px solid green;padding: 10px;')
         self.gif_label.setMovie(self.movie)
         self.movie.start()
         
@@ -72,7 +76,7 @@ class MyWindow(QWidget):
         layout.addWidget(self.train_new_button)
         layout.addWidget(self.last_old_time_label)
         layout.addWidget(self.gif_label)
-        self.gif_label.move(self.gif_label.x() + 500, self.gif_label.y() - 500)
+        #self.gif_label.move(self.gif_label.x() + 500, self.gif_label.y() - 500)
         self.setLayout(layout)
 
         # Connect the button click event to the function
