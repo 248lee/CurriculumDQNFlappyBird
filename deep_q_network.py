@@ -2,6 +2,7 @@
 #============================ 导入所需的库 ===========================================
 from __future__ import print_function
 import os 
+from lockweightdense import LockedWeightsDense
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Ask the tensorflow to shut up. IF you disable this, a bunch of logs from tensorflow will put you down when you're using colab.
 import tensorflow as tf
 from threading import Event
@@ -34,8 +35,7 @@ sys.path.append("game/")
 import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
 GAME = 'FlappyBird' # 游戏名称
-ACTIONS_1 = 2
-ACTIONS_2 = 3
+ACTIONS = 2
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
@@ -57,7 +57,7 @@ class MyNet(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = Dense(ACTIONS_1, activation=None, name='dense2',
+        self.f2 = LockedWeightsDense(ACTIONS, locked_neurons=[0, 1], activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
 
@@ -95,7 +95,7 @@ class MyNet2(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = Dense(ACTIONS_2, activation=None, name='dense2',
+        self.f2 = Dense(ACTIONS, activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
     def call(self, x):
@@ -184,6 +184,7 @@ def myprint(s):
         print(s, file=f)
 
 def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=False):
+    neuron = open("neurons.txt", 'w')
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Ask the tensorflow to shut up. IF you disable this, a bunch of logs from tensorflow will put you down when you're using colab.
     tf.debugging.set_log_device_placement(False)
     if OBSERVE < 1000:
@@ -239,6 +240,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 print("NO pretrained model to load! Pleast train stage1 first!")
                 return
 
+            # Now add one more action
+            ACTIONS = 3
             net1 = MyNet2()
             net1_target = MyNet2()
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
@@ -250,6 +253,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
         else:
+            ACTIONS = 3
             net1 = MyNet2()
             net1_target = MyNet2()
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
@@ -267,6 +271,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             net1.summary(print_fn=myprint)
 
     elif stage == 3:
+        ACTIONS = 3
         if stage > now_stage:
             stage2_net = MyNet2()
             stage2_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -317,6 +322,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
 
 #============================ 加载(搜集)数据集 ===========================================
 
+    neuron.write(str(net1.f2.get_weights()[0]))
+    neuron.write("\n===========================\n")
     # 打开游戏
     game_state = game.GameState()
     game_state.initializeGame()
@@ -345,9 +352,14 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
     t_train = 0
     # 开始训练
     while True:
-        if event != None and (event.is_set() or t > max_steps):
-            game_state.closeGame()
-            exit(0)
+        if (event != None and event.is_set()) or t > max_steps:
+            print(net1.f2.get_weights()[0])
+            print("stupid python")
+            neuron.write(str(net1.f2.get_weights()[0]))
+            neuron.close()
+            game_state.closeGame() # python is trash
+            break
+            #exit(0)
         # 根据输入的s_t,选择一个动作a_t
         
         readout_t = net1(tf.expand_dims(tf.constant(s_t, dtype=tf.float32), 0))
@@ -457,6 +469,8 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 loss = tf.losses.MSE(q_truth, q)
                 print("loss = %f" % loss)
                 gradients = tape.gradient(loss, net1.trainable_variables)
+                tensor = tf.constant([[0.0, 0.0, 1.0] for i in range(gradients[4].shape[0])], shape=[gradients[4].shape[0], gradients[4].shape[1]])
+                gradients[4] = gradients[4] * tensor
                 optimizer.apply_gradients(zip(gradients, net1.trainable_variables))
 
             # 每 train 1000轮保存一次网络参数
