@@ -260,7 +260,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            net1.f2.trainable = is_pretrained_unlock
+            #net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
@@ -473,6 +473,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                     print("Lock actions: static and jump")
                     f2_weightings_index = len(gradients) - 2
                     tensor = tf.constant([[0.0, 0.0, 1.0] for i in range(gradients[f2_weightings_index].shape[0])], shape=[gradients[f2_weightings_index].shape[0], gradients[f2_weightings_index].shape[1]])
+                    print(gradients[f2_weightings_index].shape, tensor.shape)
                     gradients[f2_weightings_index] = gradients[f2_weightings_index] * tensor
                 optimizer.apply_gradients(zip(gradients, net1.trainable_variables))
 
