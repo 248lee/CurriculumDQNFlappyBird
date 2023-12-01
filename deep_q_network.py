@@ -469,8 +469,10 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 loss = tf.losses.MSE(q_truth, q)
                 print("loss = %f" % loss)
                 gradients = tape.gradient(loss, net1.trainable_variables)
-                tensor = tf.constant([[0.0, 0.0, 1.0] for i in range(gradients[4].shape[0])], shape=[gradients[4].shape[0], gradients[4].shape[1]])
-                gradients[4] = gradients[4] * tensor
+                if stage == 2 and is_pretrained_unlock == False:
+                    print("Lock actions: static and jump")
+                    tensor = tf.constant([[0.0, 0.0, 1.0] for i in range(gradients[4].shape[0])], shape=[gradients[4].shape[0], gradients[4].shape[1]])
+                    gradients[4] = gradients[4] * tensor
                 optimizer.apply_gradients(zip(gradients, net1.trainable_variables))
 
             # 每 train 1000轮保存一次网络参数
