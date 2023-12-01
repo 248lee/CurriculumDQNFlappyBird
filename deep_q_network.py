@@ -28,7 +28,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 10000 # 训练前观察积累的轮数
+OBSERVE = 1001 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -181,7 +181,7 @@ class MyNet3(Model):
         self.f2.set_weights(stage2_net.f2.get_weights())
         return
 def myprint(s):
-    with open('structure.txt','a') as f:
+    with open('structure.txt','w') as f:
         print(s, file=f)
 
 def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=False):
@@ -249,7 +249,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            net1.f2.trainable = is_pretrained_unlock
+            #net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage1(stage1_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -321,8 +321,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
       old_time_file = open("last_old_time.txt", 'r')
       old_time = int(old_time_file.readline())
 
-#============================ 加载(搜集)数据集 ===========================================
-
+#============================ 加载(搜集)数据集 ===========================================    
     neuron.write(str(net1.f2.get_weights()[0]))
     neuron.write("\n===========================\n")
     # 打开游戏
@@ -472,8 +471,9 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 gradients = tape.gradient(loss, net1.trainable_variables)
                 if stage == 2 and is_pretrained_unlock == False:
                     print("Lock actions: static and jump")
-                    tensor = tf.constant([[0.0, 0.0, 1.0] for i in range(gradients[4].shape[0])], shape=[gradients[4].shape[0], gradients[4].shape[1]])
-                    gradients[4] = gradients[4] * tensor
+                    f2_weightings_index = len(gradients) - 2
+                    tensor = tf.constant([[0.0, 0.0, 1.0] for i in range(gradients[f2_weightings_index].shape[0])], shape=[gradients[f2_weightings_index].shape[0], gradients[f2_weightings_index].shape[1]])
+                    gradients[f2_weightings_index] = gradients[f2_weightings_index] * tensor
                 optimizer.apply_gradients(zip(gradients, net1.trainable_variables))
 
             # 每 train 1000轮保存一次网络参数
