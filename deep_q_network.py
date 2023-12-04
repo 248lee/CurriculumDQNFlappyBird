@@ -96,7 +96,7 @@ class MyNet2(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = Dense(ACTIONS_2, activation=None, name='dense2',
+        self.f2 = Dense(ACTIONS_1, activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
     def call(self, x):
@@ -231,7 +231,6 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
         now_stage_file.write("1")
         now_stage_file.close()
     elif stage == 2:
-        num_of_actions = ACTIONS_2
         if stage > now_stage:
             stage1_net = MyNet()
             stage1_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -249,7 +248,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            #net1.f2.trainable = is_pretrained_unlock
+            net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage1(stage1_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -260,7 +259,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            #net1.f2.trainable = is_pretrained_unlock
+            net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
@@ -469,7 +468,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 loss = tf.losses.MSE(q_truth, q)
                 print("loss = %f" % loss)
                 gradients = tape.gradient(loss, net1.trainable_variables)
-                if stage == 2 and is_pretrained_unlock == False:
+                if num_of_actions == 3 and is_pretrained_unlock == False:
                     print("Lock actions: static and jump")
                     f2_weightings_index = len(gradients) - 2
                     tensor = tf.constant([[0.0, 0.0, 1.0] for i in range(gradients[f2_weightings_index].shape[0])], shape=[gradients[f2_weightings_index].shape[0], gradients[f2_weightings_index].shape[1]])
