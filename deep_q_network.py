@@ -28,7 +28,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 10000 # 训练前观察积累的轮数
+OBSERVE = 1000 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -114,10 +114,9 @@ class MyNet2(Model):
         return y
     def load_stage1(self, stage1_net):
         new_kernel = custom_kernel_stage2(stage1_net, self.conv2_num_of_filters // 4)
-        new_fc, new_bias = custom_dense(stage1_net, stage2_net=self)
         self.c1_1.set_weights([new_kernel, stage1_net.c1_1.get_weights()[1]])
         self.f1.set_weights([stage1_net.f1.get_weights()[0], stage1_net.f1.get_weights()[1]])
-        self.f2.set_weights([new_fc, new_bias])
+        self.f2.set_weights(stage1_net.f2.get_weights())
         return
     
 class MyNet3(Model):
@@ -175,10 +174,11 @@ class MyNet3(Model):
         return y
     def load_stage2(self, stage2_net):
         new_kernel = custom_kernel_stage3(stage2_net, self.conv3_num_of_filters // 4)
+        new_fc, new_bias = custom_dense(stage2_net, stage2_net=self)
         self.c2_1.set_weights([new_kernel, stage2_net.c2_1.get_weights()[1]])
         self.c1_1.set_weights(stage2_net.c1_1.get_weights())
         self.f1.set_weights(stage2_net.f1.get_weights())
-        self.f2.set_weights(stage2_net.f2.get_weights())
+        self.f2.set_weights([new_fc, new_bias])
         return
 def myprint(s):
     with open('structure.txt','w') as f:
@@ -289,7 +289,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            net1.f2.trainable = is_pretrained_unlock
+            #net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage2(stage2_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -301,7 +301,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            net1.f2.trainable = is_pretrained_unlock
+            #net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
