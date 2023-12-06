@@ -167,7 +167,7 @@ class GameState:
         # bullet's movement
         if self.bulletx > SCREENWIDTH + 7:
             self.is_bullet_fired = False
-            reward=-0.6
+            reward=0.05
         if self.is_bullet_fired:
             self.bulletx += self.bullet_speedX
 
@@ -298,7 +298,7 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
-                    reward = -.6
+                    reward = 0.05
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
