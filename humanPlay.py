@@ -43,5 +43,13 @@ while True:
     
     if ispress == False:
         a_t_to_game[0] = 1
+    ispress = False
+    for i in range(len(a_t_to_game)):
+        if not ispress:
+            if a_t_to_game[i] == 1:
+                ispress = True
+        else:
+            a_t_to_game[i] = 0
+        
     game_state.frame_step(a_t_to_game)
 

@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 10000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -72,7 +72,7 @@ class GameState:
     def __init__(self):
         self.pipe_generating_timer = JohnTimer(PIPEGENERATE_DELTASTEPS)
         self.resp_pipe_timer = JohnTimer(int(PIPEGENERATE_DELTASTEPS * 1.5))
-        self.redline_timer = JohnTimer(int(PIPEGENERATE_DELTASTEPS * 1.1))
+        self.redline_timer = JohnTimer(int(PIPEGENERATE_DELTASTEPS * 1.08))
         self.score = self.playerIndex = self.loopIter = 0
         self.playerx = int(SCREENWIDTH * 0.2)
         self.bulletx = self.playerx
@@ -172,7 +172,7 @@ class GameState:
             self.bulletx += self.bullet_speedX
 
         # redline's movement
-        if self.redlinex < -10:
+        if self.redlinex < -100:
             self.is_redline_appeared = False
             self.is_over_redline = False
         if self.is_redline_appeared:
@@ -281,7 +281,7 @@ class GameState:
             if self.is_bullet_fired and uPipe['action'] == 1:
                 pipeRect = pygame.Rect(uPipe['x'], 0, PIPE_WIDTH, SCREENHEIGHT)
                 pipeMask = HITMASKS['special_pipe']
-                if pixelCollision(bulletRect, pipeRect, bulletMask, pipeMask):
+                if (not uPipe['freeze']) and pixelCollision(bulletRect, pipeRect, bulletMask, pipeMask):
                     reward = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY) * 1.6
                     print("Big enough? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
