@@ -172,7 +172,7 @@ class GameState:
             self.bulletx += self.bullet_speedX
 
         # redline's movement
-        if self.redlinex < -100:
+        if self.redlinex < -180:
             self.is_redline_appeared = False
             self.is_over_redline = False
         if self.is_redline_appeared:
