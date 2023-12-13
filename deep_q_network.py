@@ -40,7 +40,7 @@ ACTIONS_2 = 3
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
-REPLAY_MEMORY = 50000 # 观测存储器D的容量
+REPLAY_MEMORY = 30000 # 观测存储器D的容量
 BATCH = 32 # 训练batch大小
 
 class MyNet(Model):
@@ -114,9 +114,10 @@ class MyNet2(Model):
         return y
     def load_stage1(self, stage1_net):
         new_kernel = custom_kernel_stage2(stage1_net, self.conv2_num_of_filters // 4)
+        new_fc, new_bias = custom_dense(stage1_net, stage2_net=self)
         self.c1_1.set_weights([new_kernel, stage1_net.c1_1.get_weights()[1]])
         self.f1.set_weights([stage1_net.f1.get_weights()[0], stage1_net.f1.get_weights()[1]])
-        self.f2.set_weights(stage1_net.f2.get_weights())
+        self.f2.set_weights([new_fc, new_bias])
         return
     
 class MyNet3(Model):
@@ -174,11 +175,10 @@ class MyNet3(Model):
         return y
     def load_stage2(self, stage2_net):
         new_kernel = custom_kernel_stage3(stage2_net, self.conv3_num_of_filters // 4)
-        new_fc, new_bias = custom_dense(stage2_net, stage2_net=self)
-        self.c2_1.set_weights([new_kernel, stage2_net.c2_1.get_weights()[1]])
-        self.c1_1.set_weights(stage2_net.c1_1.get_weights())
-        self.f1.set_weights(stage2_net.f1.get_weights())
-        self.f2.set_weights([new_fc, new_bias])
+        self.c2_1.set_weights([new_kernel, stage2_net.c2_1.get_weights()[1]])        
+        self.c1_1.set_weights([new_kernel, stage2_net.c1_1.get_weights()[1]])
+        self.f1.set_weights([stage2_net.f1.get_weights()[0], stage2_net.f1.get_weights()[1]])
+        self.f2.set_weights(stage2_net.f2.get_weights())
         return
 def myprint(s):
     with open('structure.txt','w') as f:
@@ -249,7 +249,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, resume_Adam, learning_r
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            net1.f2.trainable = is_pretrained_unlock
+            #net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage1(stage1_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -260,7 +260,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, resume_Adam, learning_r
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            net1.f2.trainable = is_pretrained_unlock
+            #net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
@@ -290,7 +290,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, resume_Adam, learning_r
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            #net1.f2.trainable = is_pretrained_unlock
+            net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage2(stage2_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -302,7 +302,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, resume_Adam, learning_r
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            #net1.f2.trainable = is_pretrained_unlock
+            net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
