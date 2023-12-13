@@ -28,7 +28,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 10000 # 训练前观察积累的轮数
+OBSERVE = 1001 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -184,7 +184,7 @@ def myprint(s):
     with open('structure.txt','w') as f:
         print(s, file=f)
 
-def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=False):
+def trainNetwork(stage, is_pretrained_unlock, max_steps, resume_Adam, learning_rate=1e-6, event=None, is_colab=False):
     num_of_actions = ACTIONS_1
     neuron = open("neurons.txt", 'w')
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Ask the tensorflow to shut up. IF you disable this, a bunch of logs from tensorflow will put you down when you're using colab.
@@ -246,7 +246,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
             # Now add one more action
             net1 = MyNet2()
             net1_target = MyNet2()
-            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
             net1.f2.trainable = is_pretrained_unlock
@@ -257,7 +257,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
         else:
             net1 = MyNet2()
             net1_target = MyNet2()
-            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
             net1.f2.trainable = is_pretrained_unlock
@@ -286,7 +286,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
 
             net1 = MyNet3()
             net1_target = MyNet3()
-            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
@@ -298,7 +298,7 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
         else:
             net1 = MyNet3()
             net1_target = MyNet3()
-            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
@@ -322,6 +322,16 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
       old_time = int(old_time_file.readline())
 
 #============================ 加载(搜集)数据集 ===========================================    
+    # Restore Adam and load up the learning rate
+    if resume_Adam:
+        checkpoint = tf.train.Checkpoint(optimizer=optimizer)
+        checkpoint_dir = './model'
+        checkpoint_manager = tf.train.CheckpointManager(checkpoint, checkpoint_dir, max_to_keep=1)
+        checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+        if learning_rate > 0:
+            optimizer.learning_rate = learning_rate
+    print(optimizer.iterations)
+    input()
     neuron.write(str(net1.f2.get_weights()[0]))
     neuron.write("\n===========================\n")
     # 打开游戏
@@ -494,6 +504,11 @@ def trainNetwork(stage, is_pretrained_unlock, max_steps, event=None, is_colab=Fa
                 score_file.close()
                 avg_rewards_1000steps = []
                 avg_scores_1000steps = []
+                # Save Adam optimizer status
+                checkpoint = tf.train.Checkpoint(optimizer=optimizer)
+                checkpoint_dir = './model'
+                checkpoint_manager = tf.train.CheckpointManager(checkpoint, checkpoint_dir, max_to_keep=1)
+                checkpoint_manager.save()
             if (t_train+old_time) % 1000 == 0:
                 # Update the target network!!!!
                 net1_target.set_weights(net1.get_weights())
@@ -629,7 +644,7 @@ def play(stage, max_steps):
 
             net1 = MyNet2()
             net1_target = MyNet2()
-            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage1(stage1_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -638,7 +653,7 @@ def play(stage, max_steps):
         else:
             net1 = MyNet2()
             net1_target = MyNet2()
-            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
@@ -664,7 +679,7 @@ def play(stage, max_steps):
 
             net1 = MyNet3()
             net1_target = MyNet3()
-            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage2(stage2_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -673,7 +688,7 @@ def play(stage, max_steps):
         else:
             net1 = MyNet3()
             net1_target = MyNet3()
-            optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-6, epsilon=1e-08)
+            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
