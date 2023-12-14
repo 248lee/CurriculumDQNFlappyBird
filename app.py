@@ -144,7 +144,7 @@ class MyWindow(QWidget):
             self.train_new_button.setEnabled(False)
 
             self.training_event = threading.Event()
-            self.training_thread = threading.Thread(target=self.run_train_network, args=(stage, is_pretrained_unlock, max_steps, is_inherit_checkpoint, lr, self.training_event))
+            self.training_thread = threading.Thread(target=self.run_train_network, args=(stage, is_pretrained_unlock, is_inherit_checkpoint, lr, max_steps, self.training_event))
             self.training_thread.start()
             #self.run_train_network(stage, is_pretrained_unlock, max_steps, self.training_event)
         else:
