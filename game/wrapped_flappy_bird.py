@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 10000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -167,8 +167,10 @@ class GameState:
 
         # bullet's movement
         if self.bulletx > SCREENWIDTH + 7:
+            if self.is_bullet_fired:
+                reward=-0.5
+                print("You should shoot something, dude? reward: ", reward)
             self.is_bullet_fired = False
-            reward=0.05
         if self.is_bullet_fired:
             self.bulletx += self.bullet_speedX
 
@@ -236,12 +238,12 @@ class GameState:
                 self.pipe_generating_timer.turnoffTimer()
                 self.redline_timer.resetTimer() # start the timer to generate the redline
                 self.resp_pipe_timer.resetTimer() # start the timer to generate the resp pipe
-                self.is_able_to_fire = True # Let the player be able to fire the bullet
         
         if self.redline_timer.isTimeup():
             self.redlinex = SCREENWIDTH + 2
             self.is_redline_appeared = True
             self.redline_timer.turnoffTimer()
+            self.is_able_to_fire = True # Let the player be able to fire the bullet
         if self.resp_pipe_timer.isTimeup():
             newPipe = getSimulPipe()
             newRespPipe = getRespPipe(PIPE_WIDTH + 10) # generating one resp right after the simul pipe
@@ -299,7 +301,7 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
-                    reward = 0.05
+                    reward = -0.5
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
