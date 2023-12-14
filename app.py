@@ -33,6 +33,7 @@ class MyWindow(QWidget):
         self.selected_stage = 1  
 
         self.pretrained_checkbox = QCheckBox('Is Pretrained Unlock')
+        self.inherit_checkpoint_checkbox = QCheckBox('Is Checkpoint Inheritted')
 
         self.train_button = QPushButton('Start Training')
         self.train_new_button = QPushButton('Train New Network')
@@ -40,6 +41,10 @@ class MyWindow(QWidget):
         self.max_steps_label = QLabel('Max Steps When Not Stopped:')
         self.max_steps_input = QLineEdit()
         self.max_steps_input.setText(str(100000))
+
+        self.learning_rate_label = QLabel('Learning rate: (If you check the inherit checkpoint, you can set learning rate <= 0 to inherit the lr from the stored adam optimizer.)')
+        self.learning_rate_input = QLineEdit()
+        self.learning_rate_input.setText(str(0.000001))
 
         # Image display area
         self.image_label = QLabel(self)
@@ -49,7 +54,7 @@ class MyWindow(QWidget):
         self.image_label.setPixmap(pixmap)
 
         # GIF display
-        self.gif_label = QLabel(self)
+        '''self.gif_label = QLabel(self)
         self.gif_label.setAlignment(Qt.AlignCenter)
         #self.gif_label.setGeometry(QRect(0, 0, 200, 200))
         #self.gif_label.setMinimumSize(QSize(640, 360))
@@ -59,7 +64,7 @@ class MyWindow(QWidget):
         self.movie = QMovie('/media/caotun8plus9/linux_drive/output.gif')
         #self.gif_label.setStyleSheet('position: absolute;left: 500;border: 3px solid green;padding: 10px;')
         self.gif_label.setMovie(self.movie)
-        self.movie.start()
+        self.movie.start()'''
         
 
         # Display the integer from the file
@@ -70,12 +75,15 @@ class MyWindow(QWidget):
         layout.addWidget(self.stage_label)
         layout.addLayout(buttons_layout)
         layout.addWidget(self.pretrained_checkbox)
+        layout.addWidget(self.inherit_checkpoint_checkbox)
         layout.addWidget(self.max_steps_label)
         layout.addWidget(self.max_steps_input)
+        layout.addWidget(self.learning_rate_label)
+        layout.addWidget(self.learning_rate_input)
         layout.addWidget(self.train_button)
         layout.addWidget(self.train_new_button)
         layout.addWidget(self.last_old_time_label)
-        layout.addWidget(self.gif_label)
+        #layout.addWidget(self.gif_label)
         #self.gif_label.move(self.gif_label.x() + 500, self.gif_label.y() - 500)
         self.setLayout(layout)
 
@@ -94,10 +102,18 @@ class MyWindow(QWidget):
         self.update_timer.timeout.connect(self.check_image_modification)
         self.update_timer.start(1000000)  # Check every 1000 second (adjust as needed)
 
+        # Timer for checking and update the last_old_time
+        self.update_timer = QTimer(self)
+        self.update_timer.timeout.connect(self.updateLastOldTime)
+        self.update_timer.start(10000)  # Check every 10 second (adjust as needed)
+
         # Initialize the image path and modification time
         self.image_path = 'reward_plot.png'  # Replace with the path to your image
         self.time_path = 'last_old_time.txt'
         self.oldTime_mtime = 0
+
+    def updateLastOldTime(self):
+        self.last_old_time_label.setText(f'# of Already Trained Steps (Updated per 100 secs): {self.read_last_old_time()}')
 
     def toggle_train_network(self):
         if not self.is_training:
@@ -111,16 +127,24 @@ class MyWindow(QWidget):
                 self.wrong_stage_window(now_stage, stage)
                 return
             is_pretrained_unlock = self.pretrained_checkbox.isChecked()
+            is_inherit_checkpoint = self.inherit_checkpoint_checkbox.isChecked()
             try:
                 max_steps = int(self.max_steps_input.text())
             except ValueError:
-                max_steps = 0  # Handle invalid input
+                print("Please type an int in the max step input box!")
+                return
+            try:
+                lr = float(self.learning_rate_input.text())
+            except:
+                print("Please type an float in the learning rate input box!")
+                return
+            
             self.train_button.setText('Stop Training')
             self.is_training = True
             self.train_new_button.setEnabled(False)
 
             self.training_event = threading.Event()
-            self.training_thread = threading.Thread(target=self.run_train_network, args=(stage, is_pretrained_unlock, max_steps, self.training_event))
+            self.training_thread = threading.Thread(target=self.run_train_network, args=(stage, is_pretrained_unlock, max_steps, is_inherit_checkpoint, lr, self.training_event))
             self.training_thread.start()
             #self.run_train_network(stage, is_pretrained_unlock, max_steps, self.training_event)
         else:
@@ -131,11 +155,11 @@ class MyWindow(QWidget):
             if self.training_thread:
                 self.training_event.set()
 
-    def run_train_network(self, stage, is_pretrained_unlock, max_steps, event : threading.Event):
+    def run_train_network(self, stage, is_pretrained_unlock, is_inherit_checkpoint, lr, max_steps, event : threading.Event):
         self.check_image_modification()
         from deep_q_network import trainNetwork
         print(f"Training Network with stage={stage}, is_pretrained_unlock={is_pretrained_unlock}")
-        trainNetwork(stage, is_pretrained_unlock, max_steps, event)
+        trainNetwork(stage, is_pretrained_unlock, is_inherit_checkpoint, lr, max_steps, event)
 
     def confirm_train_new_network(self):
         # Show a confirmation dialog before proceeding with "Train New Network"
@@ -149,6 +173,9 @@ class MyWindow(QWidget):
     def wrong_stage_window(self, now_stage, desired_stage):
         QMessageBox.information(None, 'Warning', f'你現在練到 stage{now_stage} 了, 結果你還要回去練 stage{desired_stage} ? 麻煩你選後面一點的 stage, 要不然就按 Train New Network重練一個')
 
+    def wrong_learning_rate_window(self):
+        QMessageBox.information(None, 'Warning', 'Learning rate should be larger than 0 unless you check the \"inherit checkpoint\".')
+
     def train_new_network(self):
         if os.path.exists("results.txt"):
             os.remove("results.txt")
@@ -156,6 +183,9 @@ class MyWindow(QWidget):
             os.remove("last_old_time.txt")
         if os.path.exists("model/FlappyBird.h5"):
             os.remove("model/FlappyBird.h5")
+        for i in range(3):
+            if os.path.exists("Qvalues/Q"+str(i)+".txt"):
+                os.remove("Qvalues/Q"+str(i)+".txt")
         now_stage_file = open('now_stage.txt', 'w')
         now_stage_file.write("1")
         now_stage_file.close()
@@ -192,7 +222,6 @@ class MyWindow(QWidget):
             self.drawReward()
         
     def drawReward(self):
-        self.last_old_time_label.setText(f'# of Already Trained Steps (Updated per 100 secs): {self.read_last_old_time()}')
         # Open the file for reading
         ctr = 0
         lines = []
