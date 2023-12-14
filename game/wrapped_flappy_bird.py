@@ -109,7 +109,7 @@ class GameState:
         self.bullet_speedX = 25     # bullet's velocity along X
         self.is_bullet_fired = False   # True when bullet is fired
         self.is_redline_appeared = False # True when redline is appeared
-        self.is_over_redline = False # True when the player passes the redline
+        self.is_able_to_fire = False # True when the player is able to fire the bullet. If the player is fired once, or it passes the redline, this var will become False
         self.pipe_generating_timer.resetTimer() # turn on the timer
         self.resp_pipe_timer.turnoffTimer()
         self.redline_timer.turnoffTimer()
@@ -141,11 +141,12 @@ class GameState:
                 #SOUNDS['wing'].play() #disable it if you do not need sound
 
         if (input_actions.size) >= 3 and input_actions[2] == 1:
-            if (not self.is_bullet_fired) and (not self.is_over_redline):
+            if (not self.is_bullet_fired) and (self.is_able_to_fire):
                 self.bulletx = self.playerx
-            self.is_bullet_fired = True
-            delta = 5
-            self.bullety = self.playery + delta
+                self.is_bullet_fired = True
+                delta = 5
+                self.bullety = self.playery + delta
+                self.is_able_to_fire = False # The player can only fire once until the next resppipe comes
 
         
 
@@ -174,7 +175,6 @@ class GameState:
         # redline's movement
         if self.redlinex < -180:
             self.is_redline_appeared = False
-            self.is_over_redline = False
         if self.is_redline_appeared:
             self.redlinex += self.pipeVelX
 
@@ -227,15 +227,16 @@ class GameState:
 
         # add new pipe when the time quantum(PIPEGENERATE_DELTASTEPS) is arrived
         if self.pipe_generating_timer.isTimeup():
-            action = next(IS_SIMUL)
+            pipe_action = next(IS_SIMUL)
             newPipe = getSimulPipe() # get simul pupe
             self.upperPipes.append(newPipe[0])
             self.lowerPipes.append(newPipe[1])
             self.pipe_generating_timer.resetTimer()
-            if action == 1: # triggering generation of the resp pipe
+            if pipe_action == 1: # triggering generation of the resp pipe
                 self.pipe_generating_timer.turnoffTimer()
                 self.redline_timer.resetTimer() # start the timer to generate the redline
                 self.resp_pipe_timer.resetTimer() # start the timer to generate the resp pipe
+                self.is_able_to_fire = True # Let the player be able to fire the bullet
         
         if self.redline_timer.isTimeup():
             self.redlinex = SCREENWIDTH + 2
@@ -260,7 +261,7 @@ class GameState:
 
         # check if passes redline
         if self.is_redline_appeared and self.redlinex <= self.playerx:
-            self.is_over_redline = True
+            self.is_able_to_fire = False
 
         # check if crash here
         isCrash= checkCrash({'x': self.playerx, 'y': self.playery,
