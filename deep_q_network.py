@@ -28,7 +28,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 1001 # 训练前观察积累的轮数
+OBSERVE = 10000 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -36,7 +36,7 @@ import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
 GAME = 'FlappyBird' # 游戏名称
 ACTIONS_1 = 2
-ACTIONS_2 = 3
+ACTIONS_2 = 5 # change to not equal 3 if you don't want action 3 to be treated specially
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
@@ -44,12 +44,12 @@ REPLAY_MEMORY = 30000 # 观测存储器D的容量
 BATCH = 32 # 训练batch大小
 
 class MyNet(Model):
-    def __init__(self):
+    def __init__(self, num_of_actions):
         super(MyNet, self).__init__()
         self.c1_1 = Conv2D(filters=16, kernel_size=(3, 3), padding='same', name='conv_1', 
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))  # 卷积层
-        self.b1 = BatchNormalization()  # BN层
+        #self.b1 = BatchNormalization()  # BN层
         self.a1_1 = Activation('relu', name='relu_1')  # 激活层
         self.p1 = MaxPool2D(pool_size=(2, 2), strides=2, padding='same', name='padding_1')  # 池化层
         #self.d1 = Dropout(0.2)  # dropout层
@@ -58,7 +58,7 @@ class MyNet(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = LockedWeightsDense(ACTIONS_1, locked_neurons=[0, 1], activation=None, name='dense2',
+        self.f2 = LockedWeightsDense(num_of_actions, locked_neurons=[0, 1], activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
 
@@ -81,14 +81,14 @@ class MyNet2(Model):
         self.c2_1 = Conv2D(filters=self.conv2_num_of_filters, kernel_size=(3, 3), padding='same', name='conv_2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))  # 卷积层
-        self.b2 = BatchNormalization()  # BN层
+        #self.b2 = BatchNormalization()  # BN层
         self.a2_1 = Activation('relu', name='relu_2')  # 激活层
         
         self.p2 = MaxPool2D(pool_size=(2, 2), strides=2, padding='same', name='padding_2')  # 池化层
         self.c1_1 = Conv2D(filters=16, kernel_size=(3, 3), padding='same', name='conv_1', 
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))  # 卷积层
-        self.b1 = BatchNormalization()  # BN层
+        #self.b1 = BatchNormalization()  # BN层
         self.a1_1 = Activation('relu', name='relu_1')  # 激活层
         self.p1 = MaxPool2D(pool_size=(2, 2), strides=2, padding='same', name='padding_1')  # 池化层
         #self.d1 = Dropout(0.2)  # dropout层
@@ -223,8 +223,8 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
         now_stage = int(ns.readline())
         ns.close()
     if stage == 1:
-        net1 = MyNet()
-        net1_target = MyNet()
+        net1 = MyNet(num_of_actions)
+        net1_target = MyNet(num_of_actions)
         optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-5, epsilon=1e-08)
         net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
         net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -256,7 +256,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            if num_of_actions == ACTIONS_1:
+            if num_of_actions != ACTIONS_2:
                 net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage1(stage1_net)
@@ -268,7 +268,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            if num_of_actions == ACTIONS_1:
+            if num_of_actions != ACTIONS_2:
                 net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -298,7 +298,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            if num_of_actions == ACTIONS_1:
+            if num_of_actions != ACTIONS_2:
                 net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage2(stage2_net)
@@ -311,7 +311,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             net1.c2_1.trainable = is_pretrained_unlock
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
-            if num_of_actions == ACTIONS_1:
+            if num_of_actions != ACTIONS_2:
                 net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
