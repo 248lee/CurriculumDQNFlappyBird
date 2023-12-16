@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 30
+FPS = 30000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -147,7 +147,7 @@ class GameState:
                 delta = 5
                 self.bullety = self.playery + delta
                 self.is_able_to_fire = False # The player can only fire once until the next resppipe comes
-            reward = 0.07
+            reward = 0.04
 
         
 
@@ -169,7 +169,7 @@ class GameState:
         # bullet's movement
         if self.bulletx > SCREENWIDTH + 7:
             if self.is_bullet_fired:
-                reward=-0.5
+                reward=-0.9
                 print("You should shoot something, dude? reward: ", reward)
             self.is_bullet_fired = False
         if self.is_bullet_fired:
@@ -302,7 +302,7 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
-                    reward = -0.5
+                    reward = -0.9
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
