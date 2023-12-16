@@ -147,10 +147,7 @@ class GameState:
                 delta = 5
                 self.bullety = self.playery + delta
                 self.is_able_to_fire = False # The player can only fire once until the next resppipe comes
-<<<<<<< HEAD
             reward = 0.07
-=======
->>>>>>> bc82a271af315fab4809d1ae22c90c89323732c4
 
         
 
