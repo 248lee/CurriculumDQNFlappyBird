@@ -58,7 +58,7 @@ class MyNet(Model):
         self.f1 = Dense(512, activation='relu', name='dense1',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
-        self.f2 = LockedWeightsDense(num_of_actions, locked_neurons=[0, 1], activation=None, name='dense2',
+        self.f2 = Dense(num_of_actions, activation=None, name='dense2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))
 
@@ -370,6 +370,8 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
     avg_scores_1000steps = []
 
     t_train = 0
+    net1_target.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+    net1_target.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
     net1_target.set_weights(net1.get_weights())
     # 开始训练
     while True:
