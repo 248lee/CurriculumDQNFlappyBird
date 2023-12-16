@@ -370,6 +370,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
     avg_scores_1000steps = []
 
     t_train = 0
+    net1_target.set_weights(net1.get_weights())
     # 开始训练
     while True:
         if (event != None and event.is_set()) or t > max_steps:
@@ -514,7 +515,15 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
                     score_file.write(str(ars) + '\n')
                 score_file.close()
                 avg_rewards_1000steps = []
-
+                avg_scores_1000steps = []
+                # Save Adam optimizer status
+                checkpoint = tf.train.Checkpoint(optimizer=optimizer)
+                checkpoint_dir = './model'
+                checkpoint_manager = tf.train.CheckpointManager(checkpoint, checkpoint_dir, max_to_keep=1)
+                checkpoint_manager.save()
+            if (t_train+old_time) % 5000 == 0:
+                # Update the target network!!!!
+                net1_target.set_weights(net1.get_weights())
         # 打印信息
         if (t > OBSERVE):
             print("TRAINED_TIMESTEP", (t_train+old_time), "|  ACTION", ACTIONS_NAME[action_index], "|  REWARD", r_t, \
