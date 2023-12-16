@@ -159,7 +159,7 @@ class MyWindow(QWidget):
         self.check_image_modification()
         from deep_q_network import trainNetwork
         print(f"Training Network with stage={stage}, is_pretrained_unlock={is_pretrained_unlock}")
-        trainNetwork(stage, 2, is_pretrained_unlock, max_steps, is_inherit_checkpoint, lr, event)
+        trainNetwork(stage, 3, is_pretrained_unlock, max_steps, is_inherit_checkpoint, lr, event)
 
     def confirm_train_new_network(self):
         # Show a confirmation dialog before proceeding with "Train New Network"

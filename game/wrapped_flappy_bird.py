@@ -147,6 +147,7 @@ class GameState:
                 delta = 5
                 self.bullety = self.playery + delta
                 self.is_able_to_fire = False # The player can only fire once until the next resppipe comes
+            reward = 0.07
 
         
 
@@ -331,6 +332,8 @@ class GameState:
         # showScore(self.score)
         SCREEN.blit(IMAGES['player'][self.playerIndex],
                     (self.playerx, self.playery))
+        if self.is_able_to_fire:
+            SCREEN.blit(IMAGES['canshoot'], (0, 0))
 
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         pygame.display.update()
