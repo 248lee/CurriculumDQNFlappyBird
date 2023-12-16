@@ -183,6 +183,8 @@ class MyWindow(QWidget):
             os.remove("last_old_time.txt")
         if os.path.exists("model/FlappyBird.h5"):
             os.remove("model/FlappyBird.h5")
+        if os.path.exists("scores_training.txt"):
+            os.remove("scores_training.txt")
         for i in range(3):
             if os.path.exists("Qvalues/Q"+str(i)+".txt"):
                 os.remove("Qvalues/Q"+str(i)+".txt")
