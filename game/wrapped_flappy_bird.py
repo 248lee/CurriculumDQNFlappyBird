@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 30000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -113,6 +113,7 @@ class GameState:
         self.pipe_generating_timer.resetTimer() # turn on the timer
         self.resp_pipe_timer.turnoffTimer()
         self.redline_timer.turnoffTimer()
+        self.is_boss = False
 
     def initializeGame(self):
         initialize_game()
@@ -147,7 +148,7 @@ class GameState:
                 delta = 5
                 self.bullety = self.playery + delta
                 self.is_able_to_fire = False # The player can only fire once until the next resppipe comes
-            reward = 0.04
+            reward = 0.01
 
         
 
@@ -169,7 +170,7 @@ class GameState:
         # bullet's movement
         if self.bulletx > SCREENWIDTH + 7:
             if self.is_bullet_fired:
-                reward=-0.9
+                reward=-1.2
                 print("You should shoot something, dude? reward: ", reward)
             self.is_bullet_fired = False
         if self.is_bullet_fired:
@@ -245,6 +246,7 @@ class GameState:
             self.is_redline_appeared = True
             self.redline_timer.turnoffTimer()
             self.is_able_to_fire = True # Let the player be able to fire the bullet
+            self.is_boss = True
         if self.resp_pipe_timer.isTimeup():
             newPipe = getSimulPipe()
             newRespPipe = getRespPipe(PIPE_WIDTH + 10) # generating one resp right after the simul pipe
@@ -265,6 +267,7 @@ class GameState:
         # check if passes redline
         if self.is_redline_appeared and self.redlinex <= self.playerx:
             self.is_able_to_fire = False
+            self.is_boss = False
 
         # check if crash here
         isCrash= checkCrash({'x': self.playerx, 'y': self.playery,
@@ -302,7 +305,7 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
-                    reward = -0.9
+                    reward = -1.2
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
@@ -350,7 +353,11 @@ class GameState:
                 print("Good! reward: ", reward)
         score = self.score
         #print self.upperPipes[0]['y'] + PIPE_HEIGHT - int(BASEY * 0.2)
-        return image_data, reward, terminal, score, self.is_able_to_fire
+        if terminal:
+            self.is_boss = False
+        if self.is_boss:
+            print("BOSS HERE!!")
+        return image_data, reward, terminal, score, self.is_boss
 
 def getSimulPipe():
     t = random.randint(0, 1)

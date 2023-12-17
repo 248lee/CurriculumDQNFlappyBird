@@ -240,7 +240,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
         now_stage_file.close()
     elif stage == 2:
         if stage > now_stage:
-            stage1_net = MyNet()
+            stage1_net = MyNet(num_of_actions)
             stage1_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
             stage1_net.call(Input(shape=(last_input_sidelength[0], last_input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
@@ -251,8 +251,8 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
                 return
 
             # Now add one more action
-            net1 = MyNet2()
-            net1_target = MyNet2()
+            net1 = MyNet2(num_of_actions)
+            net1_target = MyNet2(num_of_actions)
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
@@ -263,8 +263,8 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
         else:
-            net1 = MyNet2()
-            net1_target = MyNet2()
+            net1 = MyNet2(num_of_actions)
+            net1_target = MyNet2(num_of_actions)
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
@@ -282,7 +282,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
 
     elif stage == 3:
         if stage > now_stage:
-            stage2_net = MyNet2()
+            stage2_net = MyNet2(num_of_actions)
             stage2_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
             stage2_net.call(Input(shape=(last_input_sidelength[0], last_input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
@@ -355,7 +355,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
     #初始化状态并且预处理图片，把连续的四帧图像作为一个输入（State）
     do_nothing = np.zeros(num_of_actions)
     do_nothing[0] = 1
-    x_t, r_0, terminal, _ = game_state.frame_step(do_nothing)
+    x_t, r_0, terminal, _, _ = game_state.frame_step(do_nothing)
     x_t = cv2.cvtColor(cv2.resize(x_t, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
     #ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
     s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
