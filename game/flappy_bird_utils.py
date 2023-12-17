@@ -76,7 +76,7 @@ def load():
 
     IMAGES['bullet'] = pygame.image.load(BULLET_PATH).convert_alpha()
     IMAGES['redline'] = pygame.image.load(REDLINE_PATH).convert_alpha()
-    IMAGES['canshoot'] = IMAGES['numbers'][0]
+    IMAGES['canshoot'] = IMAGES['numbers'][7]
 
     # hismask for pipes
     HITMASKS['pipe'] = (
