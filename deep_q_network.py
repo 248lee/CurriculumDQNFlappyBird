@@ -350,6 +350,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
 
     # 将每一轮的观测存在D中，之后训练从D中随机抽取batch个数据训练，以打破时间连续导致的相关性，保证神经网络训练所需的随机性。
     D = deque()
+    D_boss = deque()
 
     #初始化状态并且预处理图片，把连续的四帧图像作为一个输入（State）
     do_nothing = np.zeros(num_of_actions)
@@ -404,7 +405,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             a_t_to_game[action_index] = 1
 
         #执行这个动作并观察下一个状态以及reward
-        x_t1_colored, r_t, terminal, score = game_state.frame_step(a_t_to_game)
+        x_t1_colored, r_t, terminal, score, is_boss = game_state.frame_step(a_t_to_game)
         print("============== score ====================")
         print(score)
 
@@ -436,9 +437,14 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
         terminal = tf.constant(terminal, dtype=tf.float32)
 
         # 将观测值存入之前定义的观测存储器D中
-        D.append((s_t_D, a_t_D, r_t_D, s_t1_D, terminal))
+        if is_boss:
+            D_boss.append((s_t_D, a_t_D, r_t_D, s_t1_D, terminal))
+        else:
+            D.append((s_t_D, a_t_D, r_t_D, s_t1_D, terminal))
         #如果D满了就替换最早的观测
-        if len(D) > REPLAY_MEMORY:
+        if len(D) > REPLAY_MEMORY * 3 / 4:
+            D.popleft()
+        if len(D_boss) > REPLAY_MEMORY / 4:
             D.popleft()
 
         # 更新状态，不断迭代
@@ -460,7 +466,12 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             # 随机抽取minibatch个数据训练
             print("==================start train====================")
             
-            minibatch = random.sample(D, BATCH)
+            if len(D_boss) == 0:
+                minibatch = random.sample(D, BATCH)
+            else:
+                minibatch = random.sample(D, BATCH - 1)
+                boss_random_index = random.randint(0, len(D_boss) - 1)
+                minibatch.append(D_boss[boss_random_index])
 
             # 获得batch中的每一个变量
             b_s = [d[0] for d in minibatch]

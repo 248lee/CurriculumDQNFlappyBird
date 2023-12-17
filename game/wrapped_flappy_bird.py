@@ -350,7 +350,7 @@ class GameState:
                 print("Good! reward: ", reward)
         score = self.score
         #print self.upperPipes[0]['y'] + PIPE_HEIGHT - int(BASEY * 0.2)
-        return image_data, reward, terminal, score
+        return image_data, reward, terminal, score, self.is_able_to_fire
 
 def getSimulPipe():
     t = random.randint(0, 1)
