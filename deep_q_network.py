@@ -28,7 +28,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 1001 # 训练前观察积累的轮数
+OBSERVE = 10000 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -445,7 +445,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
         if len(D) > REPLAY_MEMORY * 3 / 4:
             D.popleft()
         if len(D_boss) > REPLAY_MEMORY / 4:
-            D.popleft()
+            D_boss.popleft()
 
         # 更新状态，不断迭代
         s_t = s_t1
@@ -469,9 +469,11 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             if len(D_boss) == 0:
                 minibatch = random.sample(D, BATCH)
             else:
-                minibatch = random.sample(D, BATCH - 1)
-                boss_random_index = random.randint(0, len(D_boss) - 1)
-                minibatch.append(D_boss[boss_random_index])
+                minibatch = random.sample(D, BATCH * 3 / 4)
+                remainingBATCH = BATCH - (BATCH * 3 / 4)
+                boss_minibatch = random.sample(D_boss, remainingBATCH)
+                for btch in boss_minibatch:
+                    minibatch.append(btch)
                 
 
             # 获得batch中的每一个变量
