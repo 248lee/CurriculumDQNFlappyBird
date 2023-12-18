@@ -114,6 +114,8 @@ class GameState:
         self.resp_pipe_timer.turnoffTimer()
         self.redline_timer.turnoffTimer()
         self.is_boss = False
+        self.boss_afterwave = 8
+        self.boss_afterwave_counter = 0
 
     def initializeGame(self):
         initialize_game()
@@ -129,6 +131,9 @@ class GameState:
         self.redline_timer.pushTimer()
         reward = 0.1
         terminal = False
+
+        if self.boss_afterwave_counter < self.boss_afterwave:
+            self.boss_afterwave_counter += 1
 
         if sum(input_actions) != 1:
             raise ValueError('Multiple input actions!')
@@ -148,7 +153,7 @@ class GameState:
                 delta = 5
                 self.bullety = self.playery + delta
                 self.is_able_to_fire = False # The player can only fire once until the next resppipe comes
-            reward = 0.01
+            reward = 0.04
 
         
 
@@ -268,6 +273,7 @@ class GameState:
         if self.is_redline_appeared and self.redlinex <= self.playerx:
             self.is_able_to_fire = False
             self.is_boss = False
+            self.boss_afterwave_counter = 0
 
         # check if crash here
         isCrash= checkCrash({'x': self.playerx, 'y': self.playery,
@@ -305,7 +311,7 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
-                    reward = -1.2
+                    reward = -0.8
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
@@ -357,7 +363,7 @@ class GameState:
             self.is_boss = False
         if self.is_boss:
             print("BOSS HERE!!")
-        return image_data, reward, terminal, score, self.is_boss
+        return image_data, reward, terminal, score, (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
 
 def getSimulPipe():
     t = random.randint(0, 1)
