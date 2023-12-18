@@ -469,8 +469,8 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             if len(D_boss) == 0:
                 minibatch = random.sample(D, BATCH)
             else:
-                minibatch = random.sample(D, BATCH * 3 / 4)
-                remainingBATCH = BATCH - (BATCH * 3 / 4)
+                minibatch = random.sample(D, int(BATCH * 3 / 4))
+                remainingBATCH = BATCH - (int(BATCH * 3 / 4))
                 boss_minibatch = random.sample(D_boss, remainingBATCH)
                 for btch in boss_minibatch:
                     minibatch.append(btch)
