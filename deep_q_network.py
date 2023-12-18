@@ -15,6 +15,7 @@ import numpy as np
 from collections import deque
 import matplotlib.pyplot as plt
 import argparse
+import pygame
 os.environ['CUDA_VISIBLE_DEVICES']='0'
 
 # parser = argparse.ArgumentParser()
@@ -36,7 +37,7 @@ import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
 GAME = 'FlappyBird' # 游戏名称
 ACTIONS_1 = 2
-ACTIONS_2 = 5 # change to not equal 3 if you don't want action 3 to be treated specially
+ACTIONS_2 = 3 # change to not equal 3 if you don't want action 3 to be treated specially
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
@@ -254,6 +255,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             net1 = MyNet2(num_of_actions)
             net1_target = MyNet2(num_of_actions)
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
+            net1.c2_1.trainable = is_pretrained_unlock #BE CAREFUL
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
             if num_of_actions != ACTIONS_2:
@@ -266,6 +268,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             net1 = MyNet2(num_of_actions)
             net1_target = MyNet2(num_of_actions)
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
+            net1.c2_1.trainable = is_pretrained_unlock #BE CAREFUL
             net1.c1_1.trainable = is_pretrained_unlock
             net1.f1.trainable = is_pretrained_unlock
             if num_of_actions != ACTIONS_2:
@@ -393,16 +396,35 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
         action_index = 0
 
         #贪婪策略，有episilon的几率随机选择动作去探索，否则选取Q值最大的动作
-        if random.random() <= epsilon:
-            print("----------Random Action----------")
-            action_index = random.randrange(num_of_actions)
-            a_t_to_game[action_index] = 1
-        else:
-            print("-----------net choice----------------")
-            action_index = np.argmax(readout_t)
-            print("-----------index----------------")
-            print(action_index)
-            a_t_to_game[action_index] = 1
+        ispress = False
+        for pevent in pygame.event.get():
+            if pevent.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            # checking if keydown event happened or not
+            if pevent.type == pygame.KEYDOWN:
+                if pevent.key == pygame.K_SPACE:
+                    # if keydown event happened
+                    # than printing a string to output
+                    print("A key has been pressed")
+                    a_t_to_game[1] = 1
+                    ispress = True
+                elif pevent.key == pygame.K_0:
+                    print("FIRE!!!")
+                    a_t_to_game[2] = 1
+                    ispress = True
+        if not ispress:
+            if random.random() <= epsilon:
+                print("----------Random Action----------")
+                action_index = random.randrange(num_of_actions)
+                a_t_to_game[action_index] = 1
+            else:
+                print("-----------net choice----------------")
+                action_index = np.argmax(readout_t)
+                print("-----------index----------------")
+                print(action_index)
+                a_t_to_game[action_index] = 1
 
         #执行这个动作并观察下一个状态以及reward
         x_t1_colored, r_t, terminal, score, is_boss = game_state.frame_step(a_t_to_game)

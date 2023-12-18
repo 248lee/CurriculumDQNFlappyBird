@@ -7,7 +7,7 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-FPS = 30000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -114,7 +114,7 @@ class GameState:
         self.resp_pipe_timer.turnoffTimer()
         self.redline_timer.turnoffTimer()
         self.is_boss = False
-        self.boss_afterwave = 8
+        self.boss_afterwave = 12
         self.boss_afterwave_counter = 0
 
     def initializeGame(self):
@@ -153,7 +153,7 @@ class GameState:
                 delta = 5
                 self.bullety = self.playery + delta
                 self.is_able_to_fire = False # The player can only fire once until the next resppipe comes
-            reward = 0.04
+            reward = 0.07
 
         
 
@@ -311,7 +311,7 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
-                    reward = -0.8
+                    reward = -0.2
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
