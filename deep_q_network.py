@@ -194,7 +194,7 @@ def myprint(s):
     with open('structure.txt','w') as f:
         print(s, file=f)
 
-def trainNetwork(stage, num_of_actions, lock_mode, max_steps, resume_Adam, learning_rate=1e-6, event=None, is_colab=False):
+def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max_steps, resume_Adam, learning_rate=1e-6, event=None, is_colab=False):
     neuron = open("neurons.txt", 'w')
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Ask the tensorflow to shut up. IF you disable this, a bunch of logs from tensorflow will put you down when you're using colab.
     tf.debugging.set_log_device_placement(False)
@@ -262,7 +262,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, max_steps, resume_Adam, learn
         now_stage_file.close()
         
     elif stage == 2:
-        num_of_actions = 3
+        num_of_actions = ACTIONS_2
         if stage > now_stage:
             stage1_net = MyNet(num_of_actions)
             stage1_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -299,19 +299,20 @@ def trainNetwork(stage, num_of_actions, lock_mode, max_steps, resume_Adam, learn
             net1.c1_1.trainable = False
             net1.f1.trainable = False
             net1.f2.trainable = False
-        elif lock_mode == 1: # everything is unlocked
+        elif lock_mode == 1: # only fc is unlocked
+            net1.c2_1.trainable = False
+            net1.c1_1.trainable = False
+            net1.f1.trainable = False
+            net1.f2.trainable = True
+        elif lock_mode == 2: # everything is unlocked
             net1.c2_1.trainable = True
             net1.c1_1.trainable = True
             net1.f1.trainable = True
             net1.f2.trainable = True
-        elif lock_mode == 2: # only action3 is unlocked
-            net1.c2_1.trainable = False
-            net1.c1_1.trainable = False
-            net1.f1.trainable = False
-            net1.f2.trainable = False
+
 
     elif stage == 3:
-        num_of_actions = 3
+        num_of_actions = ACTIONS_2
         if stage > now_stage:
             stage2_net = MyNet2(num_of_actions)
             stage2_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -323,16 +324,16 @@ def trainNetwork(stage, num_of_actions, lock_mode, max_steps, resume_Adam, learn
                 print("NO pretrained model to load! Pleast train stage1 first!")
                 return
 
-            net1 = MyNet3()
-            net1_target = MyNet3()
+            net1 = MyNet3(ACTIONS_2)
+            net1_target = MyNet3(ACTIONS_2)
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage2(stage2_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
         else:
-            net1 = MyNet3()
-            net1_target = MyNet3()
+            net1 = MyNet3(ACTIONS_2)
+            net1_target = MyNet3(ACTIONS_2)
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -344,20 +345,23 @@ def trainNetwork(stage, num_of_actions, lock_mode, max_steps, resume_Adam, learn
                 return
             net1.summary(print_fn=myprint)
         if lock_mode == 0: # only new added is unlocked
-            net1.c2_1.trainable = True
-            net1.c1_1.trainable = False
-            net1.f1.trainable = False
-            net1.f2.trainable = False
-        elif lock_mode == 1: # everything is unlocked
-            net1.c2_1.trainable = True
-            net1.c1_1.trainable = True
-            net1.f1.trainable = True
-            net1.f2.trainable = True
-        elif lock_mode == 2: # only action3 is unlocked
+            net1.c3_1.trainable = True
             net1.c2_1.trainable = False
             net1.c1_1.trainable = False
             net1.f1.trainable = False
             net1.f2.trainable = False
+        elif lock_mode == 1: # only fc is unlocked
+            net1.c3_1.trainable = False
+            net1.c2_1.trainable = False
+            net1.c1_1.trainable = False
+            net1.f1.trainable = False
+            net1.f2.trainable = True
+        elif lock_mode == 2: # everything is unlocked
+            net1.c3_1.trainable = False
+            net1.c2_1.trainable = True
+            net1.c1_1.trainable = True
+            net1.f1.trainable = True
+            net1.f2.trainable = True
 
     else:
         print("笑死你可不可以給一個正確的 stage值阿? 阿就 1, 2, 3挑一個阿")
@@ -562,7 +566,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, max_steps, resume_Adam, learn
                 loss = tf.losses.MSE(q_truth, q)
                 print("loss = %f" % loss)
                 gradients = tape.gradient(loss, net1.trainable_variables)
-                if num_of_actions == ACTIONS_2 and is_pretrained_unlock == False:
+                if num_of_actions == ACTIONS_2 and lock_mode >= 1 and is_simple_actions_locked:
                     print("Lock actions: static and jump")
                     f2_weightings_index = len(gradients) - 2
                     tensor = tf.constant([[0.0, 0.0, 1.0] for i in range(gradients[f2_weightings_index].shape[0])], shape=[gradients[f2_weightings_index].shape[0], gradients[f2_weightings_index].shape[1]])
