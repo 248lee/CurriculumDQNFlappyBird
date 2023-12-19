@@ -548,10 +548,10 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
                 for ar in avg_rewards_1000steps:
                     result_file.write(str(ar) + '\n')
                 result_file.close()
-                score_file = open("scores_training.txt", 'a')
-                for ars in avg_scores_1000steps:
-                    score_file.write(str(ars) + '\n')
-                score_file.close()
+                # score_file = open("scores_training.txt", 'a')
+                # for ars in avg_scores_1000steps:
+                #     score_file.write(str(ars) + '\n')
+                # score_file.close()
                 avg_rewards_1000steps = []
                 avg_scores_1000steps = []
                 # Save Adam optimizer status
