@@ -7,6 +7,11 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
+fireReward = 0.09
+misShoot = 0
+shootWrong = 0
+
+
 FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
@@ -153,7 +158,7 @@ class GameState:
                 delta = 5
                 self.bullety = self.playery + delta
                 self.is_able_to_fire = False # The player can only fire once until the next resppipe comes
-            reward = 0.07
+            reward = fireReward
 
         
 
@@ -175,7 +180,7 @@ class GameState:
         # bullet's movement
         if self.bulletx > SCREENWIDTH + 7:
             if self.is_bullet_fired:
-                reward=-1.2
+                reward = misShoot
                 print("You should shoot something, dude? reward: ", reward)
             self.is_bullet_fired = False
         if self.is_bullet_fired:
@@ -295,7 +300,7 @@ class GameState:
                 pipeRect = pygame.Rect(uPipe['x'], 0, PIPE_WIDTH, SCREENHEIGHT)
                 pipeMask = HITMASKS['special_pipe']
                 if (not uPipe['freeze']) and pixelCollision(bulletRect, pipeRect, bulletMask, pipeMask):
-                    reward = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY) * 2
+                    reward = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY) * 2 - .3
                     print("Big enough? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
@@ -311,7 +316,7 @@ class GameState:
                     uHitmask = HITMASKS['pipe2'][0]
                     lHitmask = HITMASKS['pipe2'][1]
                 if pixelCollision(bulletRect, uPipeRect, bulletMask, uHitmask) or pixelCollision(bulletRect, lPipeRect, bulletMask, lHitmask):
-                    reward = -0.2
+                    reward = shootWrong
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
@@ -363,7 +368,7 @@ class GameState:
             self.is_boss = False
         if self.is_boss:
             print("BOSS HERE!!")
-        return image_data, reward, terminal, score, (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
+        return image_data, reward, terminal, score, False#(self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
 
 def getSimulPipe():
     t = random.randint(0, 1)

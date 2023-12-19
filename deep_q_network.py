@@ -37,7 +37,7 @@ import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
 GAME = 'FlappyBird' # 游戏名称
 ACTIONS_1 = 2
-ACTIONS_2 = 3 # change to not equal 3 if you don't want action 3 to be treated specially
+ACTIONS_2 = 5 # change to not equal 3 if you don't want action 3 to be treated specially
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
@@ -464,7 +464,7 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
         else:
             D.append((s_t_D, a_t_D, r_t_D, s_t1_D, terminal))
         #如果D满了就替换最早的观测
-        if len(D) > REPLAY_MEMORY * 3 / 4:
+        if len(D) > REPLAY_MEMORY:
             D.popleft()
         if len(D_boss) > REPLAY_MEMORY / 4:
             D_boss.popleft()
