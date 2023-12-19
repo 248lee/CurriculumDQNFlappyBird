@@ -24,7 +24,6 @@ class MyWindow(QWidget):
         for stage in range(1, 4):
             radio_button = QRadioButton(f'Stage {stage}')
             self.stage_buttons.append(radio_button)        
-
         buttons_layout = QHBoxLayout()
         for button in self.stage_buttons:
             buttons_layout.addWidget(button)
@@ -32,7 +31,24 @@ class MyWindow(QWidget):
         self.stage_buttons[0].setChecked(True)
         self.selected_stage = 1  
 
-        self.pretrained_checkbox = QCheckBox('Is Pretrained Unlock')
+        self.num_actions_label = QLabel('Select Num of Actions:')
+        self.num_actions_combo = QComboBox()
+        self.num_actions_combo.addItem('2')
+        self.num_actions_combo.addItem('3')
+
+        # Create three radio buttons for lockmode
+        self.lockmode_label = QLabel('Lock Mode:')
+        self.lock_buttons = []
+        self.lock_buttons.append(QRadioButton('Lock Pretrained'))
+        self.lock_buttons.append(QRadioButton('Lock Everything Except FC'))
+        self.lock_buttons.append(QRadioButton('Unlock everything'))
+        locks_layout = QHBoxLayout()
+        for button in self.lock_buttons:
+            locks_layout.addWidget(button)
+        self.lock_buttons[0].setChecked(True)
+        self.lockmode = 0
+
+        self.lock_simple_actions_checkbox = QCheckBox('Is Simple Actions Locked')
         self.inherit_checkpoint_checkbox = QCheckBox('Is Checkpoint Inheritted')
 
         self.train_button = QPushButton('Start Training')
@@ -72,10 +88,20 @@ class MyWindow(QWidget):
         # Create layout
         layout = QVBoxLayout()
         layout.addWidget(self.image_label) 
+
         layout.addWidget(self.stage_label)
         layout.addLayout(buttons_layout)
-        layout.addWidget(self.pretrained_checkbox)
+
+        layout.addWidget(self.num_actions_label)
+        layout.addWidget(self.num_actions_combo)
+
+        layout.addWidget(self.lockmode_label)
+        layout.addLayout(locks_layout)
+
+        layout.addWidget(self.lock_simple_actions_checkbox)
+
         layout.addWidget(self.inherit_checkpoint_checkbox)
+
         layout.addWidget(self.max_steps_label)
         layout.addWidget(self.max_steps_input)
         layout.addWidget(self.learning_rate_label)
@@ -86,10 +112,12 @@ class MyWindow(QWidget):
         #layout.addWidget(self.gif_label)
         #self.gif_label.move(self.gif_label.x() + 500, self.gif_label.y() - 500)
         self.setLayout(layout)
-
+        self.update_stage_button()
         # Connect the button click event to the function
         for button in self.stage_buttons:
-            button.toggled.connect(self.update_button_state)
+            button.toggled.connect(self.update_stage_button)
+        for button in self.lock_buttons:
+            button.toggled.connect(self.update_lockmode_button)
         self.train_button.clicked.connect(self.toggle_train_network)
         self.train_new_button.clicked.connect(self.confirm_train_new_network)
 
@@ -117,16 +145,18 @@ class MyWindow(QWidget):
 
     def toggle_train_network(self):
         if not self.is_training:
-            self.update_button_state()
+            self.update_stage_button()
+            self.update_lockmode_button()
             # Start training
             stage = self.selected_stage
+            num_of_actions = int(self.num_actions_combo.currentText())
             print("stage: ", stage)
             now_stage_file = open('now_stage.txt', 'r')
             now_stage = int(now_stage_file.readline())
             if now_stage > stage:
                 self.wrong_stage_window(now_stage, stage)
                 return
-            is_pretrained_unlock = self.pretrained_checkbox.isChecked()
+            is_simple_unlock = self.lock_simple_actions_checkbox.isChecked()
             is_inherit_checkpoint = self.inherit_checkpoint_checkbox.isChecked()
             try:
                 max_steps = int(self.max_steps_input.text())
@@ -144,7 +174,7 @@ class MyWindow(QWidget):
             self.train_new_button.setEnabled(False)
 
             self.training_event = threading.Event()
-            self.training_thread = threading.Thread(target=self.run_train_network, args=(stage, is_pretrained_unlock, is_inherit_checkpoint, lr, max_steps, self.training_event))
+            self.training_thread = threading.Thread(target=self.run_train_network, args=(stage, num_of_actions, self.lockmode, is_simple_unlock, is_inherit_checkpoint, lr, max_steps, self.training_event))
             self.training_thread.start()
             #self.run_train_network(stage, is_pretrained_unlock, max_steps, self.training_event)
         else:
@@ -155,11 +185,11 @@ class MyWindow(QWidget):
             if self.training_thread:
                 self.training_event.set()
 
-    def run_train_network(self, stage, is_pretrained_unlock, is_inherit_checkpoint, lr, max_steps, event : threading.Event):
+    def run_train_network(self, stage, num_of_actions, lockmode, is_simple_unlock, is_inherit_checkpoint, lr, max_steps, event : threading.Event):
         self.check_image_modification()
         from deep_q_network import trainNetwork
-        print(f"Training Network with stage={stage}, is_pretrained_unlock={is_pretrained_unlock}")
-        trainNetwork(stage, 3, is_pretrained_unlock, max_steps, is_inherit_checkpoint, lr, event)
+        print(f"Training Network with stage={stage}, is_simple_unlock={is_simple_unlock}")
+        trainNetwork(stage, num_of_actions, lockmode, is_simple_unlock, max_steps, is_inherit_checkpoint, lr, event)
 
     def confirm_train_new_network(self):
         # Show a confirmation dialog before proceeding with "Train New Network"
@@ -176,6 +206,9 @@ class MyWindow(QWidget):
     def wrong_learning_rate_window(self):
         QMessageBox.information(None, 'Warning', 'Learning rate should be larger than 0 unless you check the \"inherit checkpoint\".')
 
+    def wrong_num_of_actions_error(self):
+        QMessageBox.information(None, 'Warning', f'在你從 stage1 進階以前, 拜託你先練一練第三個 action, 也就是 FIRE')
+
     def train_new_network(self):
         if os.path.exists("results.txt"):
             os.remove("results.txt")
@@ -191,22 +224,53 @@ class MyWindow(QWidget):
         now_stage_file = open('now_stage.txt', 'w')
         now_stage_file.write("1")
         now_stage_file.close()
+        now_actions_file = open('now_num_of_actions.txt', 'w')
+        now_actions_file.write("2")
+        now_actions_file.close()
         sleep(5)
         self.toggle_train_network()
     
-    def update_button_state(self):
-        # Update the state of the "Train New Network" button based on the selected stage
+    def update_stage_button(self):
         self.selected_stage = None
+        for i in range(1, len(self.stage_buttons)):
+            if i != 0 and self.stage_buttons[i].isChecked():
+                    if os.path.exists("now_num_of_actions.txt"):
+                        now_num_of_actions_file = open('now_num_of_actions.txt', 'r')
+                        now_num_of_actions = int(now_num_of_actions_file.readline())
+                        if now_num_of_actions != 3:
+                            # pop out the error window, indicating that you should train the 3 actions first
+                            self.wrong_num_of_actions_error()
+                            self.stage_buttons[0].setChecked(True)
+                        else: # If the 3rd action is already changed
+                            self.num_actions_combo.setCurrentIndex(1)
+                            self.num_actions_combo.setEnabled(False)
+                    else:
+                        # pop out the error window, indicating that you should train the 3 actions first
+                        self.wrong_num_of_actions_error()
+                        self.stage_buttons[0].setChecked(True)
+                            
+                    
         for index, button in enumerate(self.stage_buttons):
             if button.isChecked():
                 self.selected_stage = index + 1
                 break
-        print(self.selected_stage, "\n\n\n\n")
-
+        # Update the validity of the "Train New Network" button based on the selected stage
         if self.selected_stage is not None and self.selected_stage != 1:
             self.train_new_button.setEnabled(False)
         else:
             self.train_new_button.setEnabled(True)
+
+    def update_lockmode_button(self):
+        self.lockmode = None
+        for index, button in enumerate(self.lock_buttons):
+            if button.isChecked():
+                self.selected_stage = index
+                break
+        # # Update the validity of the "Train New Network" button based on the selected stage
+        # if self.selected_stage is not None and self.selected_stage != 1:
+        #     self.train_new_button.setEnabled(False)
+        # else:
+        #     self.train_new_button.setEnabled(True)
 
     def read_last_old_time(self):
         # Read the integer from the file 'last_old_time.txt'

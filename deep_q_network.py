@@ -222,8 +222,8 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
     epsilon = EPSILON
 
     now_num_action = ACTIONS_1
-    if os.path.exists('now_stage.txt'):
-        ns = open('now_stage.txt', 'r')
+    if os.path.exists('now_num_of_actions.txt'):
+        ns = open('now_num_of_actions.txt', 'r')
         now_num_action = int(ns.readline())
         ns.close()
 
@@ -260,6 +260,10 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
         now_stage_file = open('now_stage.txt', 'w')
         now_stage_file.write("1")
         now_stage_file.close()
+        if lock_mode == 1: # only fc is unlocked
+            net1.c1_1.trainable = False
+            net1.f1.trainable = False
+            net1.f2.trainable = True
         
     elif stage == 2:
         num_of_actions = ACTIONS_2
