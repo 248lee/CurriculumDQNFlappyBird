@@ -74,6 +74,13 @@ class MyNet(Model):
         x = self.f1(x)
         y = self.f2(x)
         return y
+    
+    def change2To3(self, two_action_net):
+        self.c1_1.set_weights([two_action_net.c1_1.get_weights()[0], two_action_net.c1_1.get_weights()[1]])
+        self.f1.set_weights([two_action_net.f1.get_weights()[0], two_action_net.f1.get_weights()[1]])
+        new_fc, new_bias = custom_dense(two_action_net, new_net=self)
+        self.f2.set_weights([new_fc, new_bias])
+    
 class MyNet2(Model):
     def __init__(self, num_of_actions):
         super(MyNet2, self).__init__()
@@ -118,11 +125,7 @@ class MyNet2(Model):
         new_kernel = custom_kernel_stage2(stage1_net, self.conv2_num_of_filters // 4)
         self.c1_1.set_weights([new_kernel, stage1_net.c1_1.get_weights()[1]])
         self.f1.set_weights([stage1_net.f1.get_weights()[0], stage1_net.f1.get_weights()[1]])
-        if self.num_of_actions == ACTIONS_2:
-            new_fc, new_bias = custom_dense(stage1_net, new_net=self)
-            self.f2.set_weights([new_fc, new_bias])
-        else:
-            self.f2.set_weights(stage1_net.f2.get_weights())
+        self.f2.set_weights(stage1_net.f2.get_weights())
         return
     
 class MyNet3(Model):
@@ -184,17 +187,14 @@ class MyNet3(Model):
         self.c2_1.set_weights([new_kernel, stage2_net.c2_1.get_weights()[1]])        
         self.c1_1.set_weights([new_kernel, stage2_net.c1_1.get_weights()[1]])
         self.f1.set_weights([stage2_net.f1.get_weights()[0], stage2_net.f1.get_weights()[1]])
-        if self.num_of_actions == ACTIONS_2:
-            new_fc, new_bias = custom_dense(stage2_net, new_net=self)
-            self.f2.set_weights([new_fc, new_bias])
-        else:
-            self.f2.set_weights(stage2_net.f2.get_weights())
+        self.f2.set_weights(stage2_net.f2.get_weights())
         return
+    
 def myprint(s):
     with open('structure.txt','w') as f:
         print(s, file=f)
 
-def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_Adam, learning_rate=1e-6, event=None, is_colab=False):
+def trainNetwork(stage, num_of_actions, lock_mode, max_steps, resume_Adam, learning_rate=1e-6, event=None, is_colab=False):
     neuron = open("neurons.txt", 'w')
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Ask the tensorflow to shut up. IF you disable this, a bunch of logs from tensorflow will put you down when you're using colab.
     tf.debugging.set_log_device_placement(False)
@@ -209,6 +209,8 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
         current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         train_log_dir = 'logs/gradient_tape/curriculum/train'
         train_summary_writer = tf.summary.create_file_writer(train_log_dir)
+
+    
         
 #============================ 模型创建与加载 ===========================================
     old_time = 0 # Python is trash
@@ -218,28 +220,49 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
     last_input_sidelength = side_length_each_stage[stage - 1]
     checkpoint_save_path = "./model/FlappyBird.h5"
     epsilon = EPSILON
+
+    now_num_action = ACTIONS_1
+    if os.path.exists('now_stage.txt'):
+        ns = open('now_stage.txt', 'r')
+        now_num_action = int(ns.readline())
+        ns.close()
+
     now_stage = 1
     if os.path.exists('now_stage.txt'):
         ns = open('now_stage.txt', 'r')
         now_stage = int(ns.readline())
         ns.close()
     if stage == 1:
+        optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-5, epsilon=1e-08)
         net1 = MyNet(num_of_actions)
         net1_target = MyNet(num_of_actions)
-        optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-5, epsilon=1e-08)
         net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
         net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
         net1.summary(print_fn=myprint)
-        if os.path.exists(checkpoint_save_path):
-            print('-------------load the model-----------------')
-            net1.load_weights(checkpoint_save_path,by_name=True)
+        if now_num_action == num_of_actions:
+            if os.path.exists(checkpoint_save_path):
+                print('-------------load the model-----------------')
+                net1.load_weights(checkpoint_save_path,by_name=True)
+            else:
+                print('-------------train new model-----------------')
         else:
-            print('-------------train new model-----------------')
-        print((net1.c1_1.get_weights())[0].shape)
+            print("FROM TWO ACTIONS TO THREE!")
+            old_net1 = MyNet(ACTIONS_1)
+            old_net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
+            old_net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
+            old_net1.summary(print_fn=myprint)
+            old_net1.load_weights(checkpoint_save_path,by_name=True)
+            net1.change2To3()
+            old_net1 = None
+            num_actions_file = open('now_stage.txt', 'w')
+            num_actions_file.write(str(ACTIONS_2))
+            num_actions_file.close()
         now_stage_file = open('now_stage.txt', 'w')
         now_stage_file.write("1")
         now_stage_file.close()
+        
     elif stage == 2:
+        num_of_actions = 3
         if stage > now_stage:
             stage1_net = MyNet(num_of_actions)
             stage1_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -251,28 +274,17 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
                 print("NO pretrained model to load! Pleast train stage1 first!")
                 return
 
-            # Now add one more action
-            net1 = MyNet2(num_of_actions)
-            net1_target = MyNet2(num_of_actions)
-            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
-            net1.c2_1.trainable = is_pretrained_unlock #BE CAREFUL
-            net1.c1_1.trainable = is_pretrained_unlock
-            net1.f1.trainable = is_pretrained_unlock
-            if num_of_actions != ACTIONS_2:
-                net1.f2.trainable = is_pretrained_unlock
+            net1 = MyNet2(ACTIONS_2)
+            net1_target = MyNet2(ACTIONS_2)
+            optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)                
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage1(stage1_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             net1.summary(print_fn=myprint)
         else:
-            net1 = MyNet2(num_of_actions)
-            net1_target = MyNet2(num_of_actions)
+            net1 = MyNet2(ACTIONS_2)
+            net1_target = MyNet2(ACTIONS_2)
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
-            net1.c2_1.trainable = is_pretrained_unlock #BE CAREFUL
-            net1.c1_1.trainable = is_pretrained_unlock
-            net1.f1.trainable = is_pretrained_unlock
-            if num_of_actions != ACTIONS_2:
-                net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
@@ -282,8 +294,24 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
                 print("NO pretrained model to load! Pleast train stage1 first!")
                 return
             net1.summary(print_fn=myprint)
+        if lock_mode == 0: # only new added is unlocked
+            net1.c2_1.trainable = True
+            net1.c1_1.trainable = False
+            net1.f1.trainable = False
+            net1.f2.trainable = False
+        elif lock_mode == 1: # everything is unlocked
+            net1.c2_1.trainable = True
+            net1.c1_1.trainable = True
+            net1.f1.trainable = True
+            net1.f2.trainable = True
+        elif lock_mode == 2: # only action3 is unlocked
+            net1.c2_1.trainable = False
+            net1.c1_1.trainable = False
+            net1.f1.trainable = False
+            net1.f2.trainable = False
 
     elif stage == 3:
+        num_of_actions = 3
         if stage > now_stage:
             stage2_net = MyNet2(num_of_actions)
             stage2_net.build(input_shape=(1, last_input_sidelength[0], last_input_sidelength[1], 4))
@@ -298,11 +326,6 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             net1 = MyNet3()
             net1_target = MyNet3()
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
-            net1.c2_1.trainable = is_pretrained_unlock
-            net1.c1_1.trainable = is_pretrained_unlock
-            net1.f1.trainable = is_pretrained_unlock
-            if num_of_actions != ACTIONS_2:
-                net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.load_stage2(stage2_net)
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
@@ -311,11 +334,6 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
             net1 = MyNet3()
             net1_target = MyNet3()
             optimizer = tf.keras.optimizers.Adam(learning_rate = learning_rate, epsilon=1e-08)
-            net1.c2_1.trainable = is_pretrained_unlock
-            net1.c1_1.trainable = is_pretrained_unlock
-            net1.f1.trainable = is_pretrained_unlock
-            if num_of_actions != ACTIONS_2:
-                net1.f2.trainable = is_pretrained_unlock
             net1.build(input_shape=(1, input_sidelength[0], input_sidelength[1], 4))
             net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             if os.path.exists(checkpoint_save_path):
@@ -325,6 +343,21 @@ def trainNetwork(stage, num_of_actions, is_pretrained_unlock, max_steps, resume_
                 print("NO pretrained model to load! Pleast train stage1 first!")
                 return
             net1.summary(print_fn=myprint)
+        if lock_mode == 0: # only new added is unlocked
+            net1.c2_1.trainable = True
+            net1.c1_1.trainable = False
+            net1.f1.trainable = False
+            net1.f2.trainable = False
+        elif lock_mode == 1: # everything is unlocked
+            net1.c2_1.trainable = True
+            net1.c1_1.trainable = True
+            net1.f1.trainable = True
+            net1.f2.trainable = True
+        elif lock_mode == 2: # only action3 is unlocked
+            net1.c2_1.trainable = False
+            net1.c1_1.trainable = False
+            net1.f1.trainable = False
+            net1.f2.trainable = False
 
     else:
         print("笑死你可不可以給一個正確的 stage值阿? 阿就 1, 2, 3挑一個阿")
