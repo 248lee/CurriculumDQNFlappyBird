@@ -264,7 +264,7 @@ class MyWindow(QWidget):
         self.lockmode = None
         for index, button in enumerate(self.lock_buttons):
             if button.isChecked():
-                self.selected_stage = index
+                self.lockmode = index
                 break
         # # Update the validity of the "Train New Network" button based on the selected stage
         # if self.selected_stage is not None and self.selected_stage != 1:

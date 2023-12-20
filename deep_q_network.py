@@ -37,7 +37,7 @@ import wrapped_flappy_bird as game
 tf.debugging.set_log_device_placement(True)
 GAME = 'FlappyBird' # 游戏名称
 ACTIONS_1 = 2
-ACTIONS_2 = 5 # change to not equal 3 if you don't want action 3 to be treated specially
+ACTIONS_2 = 3 # change to not equal 3 if you don't want action 3 to be treated specially
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
@@ -385,6 +385,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
         if learning_rate > 0:
             optimizer.learning_rate = learning_rate
     print(optimizer.iterations)
+    print(stage, num_of_actions, lock_mode, is_simple_actions_locked, max_steps, resume_Adam, learning_rate, event, is_colab)
     input()
     neuron.write(str(net1.f2.get_weights()[0]))
     neuron.write("\n===========================\n")
