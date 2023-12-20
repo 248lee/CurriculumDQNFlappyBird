@@ -7,12 +7,12 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-fireReward = 0.075
-misShoot = 0
-shootWrong = -0.01
+fireReward = 0.045
+misShoot = -0.2
+shootWrong = -0.15
 
 
-FPS = 30
+FPS = 30000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -300,7 +300,11 @@ class GameState:
                 pipeRect = pygame.Rect(uPipe['x'], 0, PIPE_WIDTH, SCREENHEIGHT)
                 pipeMask = HITMASKS['special_pipe']
                 if (not uPipe['freeze']) and pixelCollision(bulletRect, pipeRect, bulletMask, pipeMask):
-                    reward = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY) * 2 + shootWrong
+                    open_ratio = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY)
+                    if open_ratio < 0.15:
+                        reward = shootWrong
+                    else:
+                        reward = open_ratio * 2
                     print("Big enough? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False

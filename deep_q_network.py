@@ -458,7 +458,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
                     ispress = True
                 
         if (not ispress):
-            if (t > OBSERVE):
+            if (t > -1):
                 if random.random() <= epsilon:
                     print("----------Random Action----------")
                     action_index = random.randrange(num_of_actions)
@@ -471,7 +471,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
                     a_t_to_game[action_index] = 1
             else:
                 a_t_to_game[0] = 1
-        if (t <= OBSERVE):
+        if (t <= -1):
             ispress = False
             for i in range(len(a_t_to_game)):
                 if not ispress:
