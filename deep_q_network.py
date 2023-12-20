@@ -29,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 10000 # 训练前观察积累的轮数
+OBSERVE = 5000 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -252,7 +252,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
             old_net1.call(Input(shape=(input_sidelength[0], input_sidelength[1], 4)))
             old_net1.summary(print_fn=myprint)
             old_net1.load_weights(checkpoint_save_path,by_name=True)
-            net1.change2To3()
+            net1.change2To3(old_net1)
             old_net1 = None
             num_actions_file = open('now_stage.txt', 'w')
             num_actions_file.write(str(ACTIONS_2))
@@ -448,24 +448,37 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
                 if pevent.key == pygame.K_SPACE:
                     # if keydown event happened
                     # than printing a string to output
-                    print("A key has been pressed")
+                    print("Teacher's fly")
                     a_t_to_game[1] = 1
                     ispress = True
                 elif pevent.key == pygame.K_0:
-                    print("FIRE!!!")
+                    print("Teacher's FIRE!!!")
                     a_t_to_game[2] = 1
                     ispress = True
-        if not ispress:
-            if random.random() <= epsilon:
-                print("----------Random Action----------")
-                action_index = random.randrange(num_of_actions)
-                a_t_to_game[action_index] = 1
+                
+        if (not ispress):
+            if (t > OBSERVE):
+                if random.random() <= epsilon:
+                    print("----------Random Action----------")
+                    action_index = random.randrange(num_of_actions)
+                    a_t_to_game[action_index] = 1
+                else:
+                    print("-----------net choice----------------")
+                    action_index = np.argmax(readout_t)
+                    print("-----------index----------------")
+                    print(action_index)
+                    a_t_to_game[action_index] = 1
             else:
-                print("-----------net choice----------------")
-                action_index = np.argmax(readout_t)
-                print("-----------index----------------")
-                print(action_index)
-                a_t_to_game[action_index] = 1
+                a_t_to_game[0] = 1
+        if (t <= OBSERVE):
+            ispress = False
+            for i in range(len(a_t_to_game)):
+                if not ispress:
+                    if a_t_to_game[i] == 1:
+                        ispress = True
+                else:
+                    a_t_to_game[i] = 0
+
 
         #执行这个动作并观察下一个状态以及reward
         x_t1_colored, r_t, terminal, score, is_boss = game_state.frame_step(a_t_to_game)

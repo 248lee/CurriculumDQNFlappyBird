@@ -7,9 +7,9 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-fireReward = 0.09
+fireReward = 0.075
 misShoot = 0
-shootWrong = 0
+shootWrong = -0.01
 
 
 FPS = 30
@@ -300,7 +300,7 @@ class GameState:
                 pipeRect = pygame.Rect(uPipe['x'], 0, PIPE_WIDTH, SCREENHEIGHT)
                 pipeMask = HITMASKS['special_pipe']
                 if (not uPipe['freeze']) and pixelCollision(bulletRect, pipeRect, bulletMask, pipeMask):
-                    reward = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY) * 2 - .3
+                    reward = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY) * 2 + shootWrong
                     print("Big enough? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
@@ -368,7 +368,7 @@ class GameState:
             self.is_boss = False
         if self.is_boss:
             print("BOSS HERE!!")
-        return image_data, reward, terminal, score, False#(self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
+        return image_data, reward, terminal, score, False or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
 
 def getSimulPipe():
     t = random.randint(0, 1)
