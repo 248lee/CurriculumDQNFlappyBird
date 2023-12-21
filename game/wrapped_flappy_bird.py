@@ -9,7 +9,7 @@ from itertools import cycle
 
 fireReward = 0.045
 misShoot = -0.2
-shootWrong = -0.15
+shootWrong = -0.25
 
 
 FPS = 30000
