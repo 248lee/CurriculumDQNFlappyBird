@@ -29,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 5000 # 训练前观察积累的轮数
+OBSERVE = 10000 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -41,7 +41,7 @@ ACTIONS_2 = 3 # change to not equal 3 if you don't want action 3 to be treated s
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
-REPLAY_MEMORY = 30000 # 观测存储器D的容量
+REPLAY_MEMORY = 50000 # 观测存储器D的容量
 BATCH = 32 # 训练batch大小
 
 class MyNet(Model):

@@ -12,7 +12,7 @@ misShoot = -0.2
 shootWrong = -0.35
 
 
-FPS = 30000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -119,8 +119,8 @@ class GameState:
         self.resp_pipe_timer.turnoffTimer()
         self.redline_timer.turnoffTimer()
         self.is_boss = False
-        self.boss_afterwave = 12
-        self.boss_afterwave_counter = 0
+        self.boss_afterwave = 100
+        self.boss_afterwave_counter = 101
 
     def initializeGame(self):
         initialize_game()
@@ -370,8 +370,9 @@ class GameState:
         #print self.upperPipes[0]['y'] + PIPE_HEIGHT - int(BASEY * 0.2)
         if terminal:
             self.is_boss = False
-        if self.is_boss:
+        if self.is_boss or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave):
             print("BOSS HERE!!")
+        print(self.boss_afterwave_counter)
         return image_data, reward, terminal, score, False or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
 
 def getSimulPipe():
