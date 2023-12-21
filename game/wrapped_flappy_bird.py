@@ -12,7 +12,7 @@ misShoot = -0.2
 shootWrong = -0.35
 
 
-FPS = 30
+FPS = 30000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 

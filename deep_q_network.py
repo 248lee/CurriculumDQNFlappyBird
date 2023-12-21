@@ -29,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 10000 # 训练前观察积累的轮数
+OBSERVE = 1001 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -402,6 +402,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
     do_nothing[0] = 1
     x_t, r_0, terminal, _, _ = game_state.frame_step(do_nothing)
     x_t = cv2.cvtColor(cv2.resize(x_t, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
+    x_t = (x_t - np.mean(x_t)) / x_t.std()
     #ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
     s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
 
@@ -503,14 +504,15 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
         x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
         #ret, x_t1 = cv2.threshold(x_t1, 1, 255, cv2.THRESH_BINARY)
         x_t1 = np.reshape(x_t1, (input_sidelength[1], input_sidelength[0], 1))
+        x_t1 = (x_t1 - np.mean(x_t1)) / x_t1.std()
         #plt.imshow(x_t1, cmap='gray')
         #plt.savefig('game.png')
         s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
 
-        s_t_D = tf.convert_to_tensor(s_t, dtype=tf.uint8)
+        s_t_D = tf.convert_to_tensor(s_t, dtype=tf.float16)
         a_t_D = tf.constant(a_t, dtype=tf.int32)
         r_t_D = tf.constant(r_t, dtype=tf.float32)
-        s_t1_D = tf.constant(s_t1, dtype=tf.uint8)
+        s_t1_D = tf.constant(s_t1, dtype=tf.float16)
         terminal = tf.constant(terminal, dtype=tf.float32)
 
         # 将观测值存入之前定义的观测存储器D中
@@ -556,7 +558,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
             # 获得batch中的每一个变量
             b_s = [d[0] for d in minibatch]
             b_s = tf.stack(b_s, axis=0)
-            b_s = tf.cast(b_s, dtype=tf.float32)
+            #b_s = tf.cast(b_s, dtype=tf.float32)
 
             b_a = [d[1] for d in minibatch]
             b_a = tf.expand_dims(b_a, axis=1)
@@ -567,7 +569,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
 
             b_s_ = [d[3] for d in minibatch]
             b_s_ = tf.stack(b_s_, axis=0)
-            b_s_ = tf.cast(b_s_, dtype=tf.float32)
+            #b_s_ = tf.cast(b_s_, dtype=tf.float32)
 
             b_done = [d[4] for d in minibatch]
             b_done = tf.stack(b_done, axis=0)
