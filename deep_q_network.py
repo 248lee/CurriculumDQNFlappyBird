@@ -542,7 +542,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
             t_train += 1
             # 随机抽取minibatch个数据训练
             print("==================start train====================")
-            
+            print("Boss length", len(D_boss))
             if len(D_boss) == 0:
                 minibatch = random.sample(D, BATCH)
             else:

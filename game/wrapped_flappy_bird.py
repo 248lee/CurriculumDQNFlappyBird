@@ -7,9 +7,9 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-fireReward = 0.045
+fireReward = 0.04
 misShoot = -0.2
-shootWrong = -0.25
+shootWrong = -0.35
 
 
 FPS = 30000
@@ -392,9 +392,10 @@ def getSimulPipe():
 
 def getRespPipe(delta):
     pipeX = SCREENWIDTH + 10
+    deltay = random.uniform(0, PIPE_HEIGHT)
     return [
-        {'x': pipeX + delta, 'y': 0 - PIPE_HEIGHT, 'type': 0, 'action': 1, 'freeze': False},  # upper pipe
-        {'x': pipeX + delta, 'y': SCREENHEIGHT - (SCREENHEIGHT - BASEY), 'type': 0, 'action': 1, 'freeze': False},  # lower pipe
+        {'x': pipeX + delta, 'y': 0 - PIPE_HEIGHT + deltay, 'type': 0, 'action': 1, 'freeze': False},  # upper pipe
+        {'x': pipeX + delta, 'y': SCREENHEIGHT - (SCREENHEIGHT - BASEY) - deltay, 'type': 0, 'action': 1, 'freeze': False},  # lower pipe
     ]
 
 def showScore(score):
