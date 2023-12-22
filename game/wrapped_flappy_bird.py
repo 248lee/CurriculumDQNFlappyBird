@@ -7,9 +7,9 @@ import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
 
-fireReward = 0.04
-misShoot = -0.2
-shootWrong = -0.35
+fireReward = 0.08
+misShoot = -0.01
+shootWrong = -0.01
 
 
 FPS = 30000

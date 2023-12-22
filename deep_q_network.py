@@ -29,7 +29,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 1001 # 训练前观察积累的轮数
+OBSERVE = 5000 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -432,7 +432,6 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
             #exit(0)
         # 根据输入的s_t,选择一个动作a_t
         
-        print(s_t)
         readout_t = net1(tf.expand_dims(tf.constant(s_t, dtype=tf.float32), 0))
         print(readout_t)
         readouts.append(readout_t)
@@ -505,10 +504,13 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
         x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
         #ret, x_t1 = cv2.threshold(x_t1, 1, 255, cv2.THRESH_BINARY)
         x_t1 = np.reshape(x_t1, (input_sidelength[1], input_sidelength[0], 1))
-        x_t1 = (x_t1 - np.mean(x_t1)) / 64
+        mea = np.mean(x_t1)
+        x_t1 = (x_t1 - mea) / 64
         
-        #plt.imshow(x_t1, cmap='gray')
+        #x_t_back = x_t1 * 64 + mea
+        #plt.imshow(x_t_back, cmap='gray')
         #plt.savefig('game.png')
+        #input()
         s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
 
         s_t_D = tf.convert_to_tensor(s_t, dtype=tf.float16)
