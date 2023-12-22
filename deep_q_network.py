@@ -47,10 +47,11 @@ BATCH = 32 # 训练batch大小
 class MyNet(Model):
     def __init__(self, num_of_actions):
         super(MyNet, self).__init__()
+        self.b1 = BatchNormalization()  # BN层
         self.c1_1 = Conv2D(filters=16, kernel_size=(3, 3), padding='same', name='conv_1', 
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))  # 卷积层
-        #self.b1 = BatchNormalization()  # BN层
+        #self.b0 = BatchNormalization()  # BN层
         self.a1_1 = Activation('relu', name='relu_1')  # 激活层
         self.p1 = MaxPool2D(pool_size=(2, 2), strides=2, padding='same', name='padding_1')  # 池化层
         #self.d1 = Dropout(0.2)  # dropout层
@@ -84,19 +85,20 @@ class MyNet(Model):
 class MyNet2(Model):
     def __init__(self, num_of_actions):
         super(MyNet2, self).__init__()
+        self.b2 = BatchNormalization()  # BN层
         self.num_of_actions = num_of_actions
         self.conv2_num_of_filters = 32
         self.c2_1 = Conv2D(filters=self.conv2_num_of_filters, kernel_size=(3, 3), padding='same', name='conv_2',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))  # 卷积层
-        #self.b2 = BatchNormalization()  # BN层
+        self.b1 = BatchNormalization()  # BN层
         self.a2_1 = Activation('relu', name='relu_2')  # 激活层
         
         self.p2 = MaxPool2D(pool_size=(2, 2), strides=2, padding='same', name='padding_2')  # 池化层
         self.c1_1 = Conv2D(filters=16, kernel_size=(3, 3), padding='same', name='conv_1', 
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))  # 卷积层
-        #self.b1 = BatchNormalization()  # BN层
+        #self.b0 = BatchNormalization()  # BN层
         self.a1_1 = Activation('relu', name='relu_1')  # 激活层
         self.p1 = MaxPool2D(pool_size=(2, 2), strides=2, padding='same', name='padding_1')  # 池化层
         #self.d1 = Dropout(0.2)  # dropout层
@@ -133,10 +135,11 @@ class MyNet3(Model):
         super(MyNet3, self).__init__()
         self.num_of_actions = num_of_actions
         self.conv3_num_of_filters = 32
+        self.b3 = BatchNormalization()  # BN层
         self.c3_1 = Conv2D(filters=self.conv3_num_of_filters, kernel_size=(3, 3), padding='same', name='conv_3',
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))  # 卷积层
-        #self.b1 = BatchNormalization()  # BN层
+        #self.b2 = BatchNormalization()  # BN层
         self.a3_1 = Activation('relu', name='relu_3')  # 激活层
         
         self.p3 = MaxPool2D(pool_size=(2, 2), strides=2, padding='same', name='padding_3')  # 池化层
@@ -152,7 +155,7 @@ class MyNet3(Model):
         self.c1_1 = Conv2D(filters=16, kernel_size=(3, 3), padding='same', name='conv_1', 
                            kernel_initializer=tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.01, seed=None),
                            bias_initializer = tf.keras.initializers.Constant(value=0.01))  # 卷积层
-        #self.b1 = BatchNormalization()  # BN层
+        #self.b0 = BatchNormalization()  # BN层
         self.a1_1 = Activation('relu', name='relu_1')  # 激活层
         self.p1 = MaxPool2D(pool_size=(2, 2), strides=2, padding='same', name='padding_1')  # 池化层
         #self.d1 = Dropout(0.2)  # dropout层
@@ -402,7 +405,6 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
     do_nothing[0] = 1
     x_t, r_0, terminal, _, _ = game_state.frame_step(do_nothing)
     x_t = cv2.cvtColor(cv2.resize(x_t, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
-    x_t = (x_t - np.mean(x_t)) / 64
     #ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
     s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
 
@@ -504,8 +506,6 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
         x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
         #ret, x_t1 = cv2.threshold(x_t1, 1, 255, cv2.THRESH_BINARY)
         x_t1 = np.reshape(x_t1, (input_sidelength[1], input_sidelength[0], 1))
-        mea = np.mean(x_t1)
-        x_t1 = (x_t1 - mea) / 64
         
         #x_t_back = x_t1 * 64 + mea
         #plt.imshow(x_t_back, cmap='gray')
@@ -513,10 +513,10 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
         #input()
         s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
 
-        s_t_D = tf.convert_to_tensor(s_t, dtype=tf.float16)
+        s_t_D = tf.convert_to_tensor(s_t, dtype=tf.uint8)
         a_t_D = tf.constant(a_t, dtype=tf.int32)
         r_t_D = tf.constant(r_t, dtype=tf.float32)
-        s_t1_D = tf.constant(s_t1, dtype=tf.float16)
+        s_t1_D = tf.constant(s_t1, dtype=tf.uint8)
         terminal = tf.constant(terminal, dtype=tf.float32)
 
         # 将观测值存入之前定义的观测存储器D中
@@ -562,7 +562,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
             # 获得batch中的每一个变量
             b_s = [d[0] for d in minibatch]
             b_s = tf.stack(b_s, axis=0)
-            #b_s = tf.cast(b_s, dtype=tf.float32)
+            b_s = tf.cast(b_s, dtype=tf.float32)
 
             b_a = [d[1] for d in minibatch]
             b_a = tf.expand_dims(b_a, axis=1)
@@ -573,7 +573,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
 
             b_s_ = [d[3] for d in minibatch]
             b_s_ = tf.stack(b_s_, axis=0)
-            #b_s_ = tf.cast(b_s_, dtype=tf.float32)
+            b_s_ = tf.cast(b_s_, dtype=tf.float32)
 
             b_done = [d[4] for d in minibatch]
             b_done = tf.stack(b_done, axis=0)
