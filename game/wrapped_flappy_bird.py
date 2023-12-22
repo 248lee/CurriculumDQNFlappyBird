@@ -373,7 +373,7 @@ class GameState:
         if self.is_boss or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave):
             print("BOSS HERE!!")
         print(self.boss_afterwave_counter)
-        return image_data, reward, terminal, score, False or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
+        return image_data, reward, terminal, score, False #or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
 
 def getSimulPipe():
     t = random.randint(0, 1)
