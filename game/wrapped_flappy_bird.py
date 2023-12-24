@@ -14,7 +14,7 @@ shootWrong = -0.01
 sweetBoss = 1.1
 isSweet = True
 
-FPS = 30
+FPS = 30000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
