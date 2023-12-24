@@ -14,7 +14,7 @@ shootWrong = -0.01
 sweetBoss = 1.1
 isSweet = True
 
-FPS = 30000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -383,7 +383,7 @@ class GameState:
         if self.is_boss or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave):
             print("BOSS HERE!!")
         print("reward", reward)
-        return image_data, reward, terminal, score, False #or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
+        return image_data, reward, terminal, score, False or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
 
 def getSimulPipe():
     t = random.randint(0, 1)
