@@ -6,13 +6,15 @@ import flappy_bird_utils
 import pygame.surfarray as surfarray
 from pygame.locals import *
 from itertools import cycle
+from enum import Enum
 
 fireReward = 0.08
 misShoot = -0.01
 shootWrong = -0.01
+sweetBoss = 1.5
+isSweet = True
 
-
-FPS = 30000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -38,6 +40,10 @@ PLAYER_INDEX_GEN = cycle([0, 1, 2, 1])
 PIPEGENERATE_DELTASTEPS = 90
 IS_SIMUL = cycle([0, 0, 0, 1])
 
+class CrashReason(Enum):
+        bump_ground = 1
+        bump_simul_pipe = 2
+        bump_resp_pipe = 3
 
 def initialize_game():
     global FPSCLOCK, SCREEN, IMAGES, SOUNDS, HITMASKS
@@ -281,15 +287,19 @@ class GameState:
             self.boss_afterwave_counter = 0
 
         # check if crash here
-        isCrash= checkCrash({'x': self.playerx, 'y': self.playery,
+        isCrash, crashReason = checkCrash({'x': self.playerx, 'y': self.playery,
                              'index': self.playerIndex},
                             self.upperPipes, self.lowerPipes)
         if isCrash:
             #SOUNDS['hit'].play() #disable it if you do not need sound
             #SOUNDS['die'].play() #disable it if you do not need sound
             terminal = True
+            if isSweet and crashReason == CrashReason.bump_resp_pipe:
+                reward = sweetBoss
+            else:
+                reward = -1
             self.__init__()
-            reward = -1
+            
 
         # chech bullet his simul pipes            
         # check bullet hit resp pipes
@@ -372,7 +382,7 @@ class GameState:
             self.is_boss = False
         if self.is_boss or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave):
             print("BOSS HERE!!")
-        print(self.boss_afterwave_counter)
+        print("reward", reward)
         return image_data, reward, terminal, score, False #or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
 
 def getSimulPipe():
@@ -390,6 +400,8 @@ def getSimulPipe():
         {'x': pipeX, 'y': gapY - PIPE_HEIGHT, 'type': t, 'action': 0},  # upper pipe
         {'x': pipeX, 'y': gapY + PIPEGAPSIZE, 'type': t, 'action': 0},  # lower pipe
     ]
+
+# 'action': 0 means simul pipe; 'action': 1 means resp pipe
 
 def getRespPipe(delta):
     pipeX = SCREENWIDTH + 10
@@ -422,7 +434,7 @@ def checkCrash(player, upperPipes, lowerPipes):
 
     # if player crashes into ground
     if player['y'] + player['h'] >= BASEY - 1:
-        return True
+        return True, CrashReason.bump_ground
     else:
 
         playerRect = pygame.Rect(player['x'], player['y'],
@@ -447,9 +459,12 @@ def checkCrash(player, upperPipes, lowerPipes):
             lCollide = pixelCollision(playerRect, lPipeRect, pHitMask, lHitmask)
 
             if uCollide or lCollide:
-                return True
+                if uPipe['action'] == 1:
+                    return True, CrashReason.bump_resp_pipe
+                else:
+                    return True, CrashReason.bump_simul_pipe
 
-    return False
+    return False, None
 
 
 def pixelCollision(rect1, rect2, hitmask1, hitmask2, control=0):
