@@ -18,6 +18,7 @@ import argparse
 import pygame
 os.environ['CUDA_VISIBLE_DEVICES']='0'
 
+
 # parser = argparse.ArgumentParser()
 # parser.add_argument('--isTrain', type=bool, default=True)
 # parser.add_argument('--num_of_steps', type=int, default=1000)
@@ -29,7 +30,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 # max_num_of_steps2 = args.num_of_steps2
 # max_num_of_steps3 = args.num_of_steps3
 # isTrain = args.isTrain
-OBSERVE = 5000 # 训练前观察积累的轮数
+OBSERVE = 8000 # 训练前观察积累的轮数
 
 side_length_each_stage = [(0, 0), (40, 40), (80, 80), (160, 160)]
 sys.path.append("game/")
@@ -389,7 +390,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
             optimizer.learning_rate = learning_rate
     print(optimizer.iterations)
     print(stage, num_of_actions, lock_mode, is_simple_actions_locked, max_steps, resume_Adam, learning_rate, event, is_colab)
-    input()
+    #input()
     neuron.write(str(net1.f2.get_weights()[0]))
     neuron.write("\n===========================\n")
     # 打开游戏
@@ -443,9 +444,9 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
         #贪婪策略，有episilon的几率随机选择动作去探索，否则选取Q值最大的动作
         ispress = False
         for pevent in pygame.event.get():
-            if pevent.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+            # if pevent.type == pygame.QUIT:
+            #     pygame.quit()
+            #     sys.exit()
 
             # checking if keydown event happened or not
             if pevent.type == pygame.KEYDOWN:
@@ -534,7 +535,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
         s_t = s_t1
         t += 1
 
-#============================ 训练网络 ===========================================
+        #============================ 训练网络 ===========================================
 
         # 观测一定轮数后开始训练
         if (t > OBSERVE):
