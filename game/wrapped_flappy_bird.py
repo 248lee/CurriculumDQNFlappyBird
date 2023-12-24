@@ -11,7 +11,7 @@ from enum import Enum
 fireReward = 0.08
 misShoot = -0.01
 shootWrong = -0.01
-sweetBoss = 1.5
+sweetBoss = 1.1
 isSweet = True
 
 FPS = 30
