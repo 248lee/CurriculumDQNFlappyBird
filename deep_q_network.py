@@ -42,7 +42,7 @@ ACTIONS_2 = 3 # change to not equal 3 if you don't want action 3 to be treated s
 ACTIONS_NAME=['不动','起飞', 'FIRE']  #动作名
 GAMMA = 0.99 # 未来奖励的衰减
 EPSILON = 0.0001
-REPLAY_MEMORY = 50000 # 观测存储器D的容量
+REPLAY_MEMORY = 30000 # 观测存储器D的容量
 BATCH = 32 # 训练batch大小
 
 class MyNet(Model):

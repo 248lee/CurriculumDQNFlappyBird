@@ -12,7 +12,7 @@ fireReward = 0.08
 misShoot = -0.01
 shootWrong = -0.01
 sweetBoss = 0.5
-isSweet = True
+isSweet = False
 boss_training = True
 
 FPS = 30000
@@ -265,7 +265,7 @@ class GameState:
             self.is_able_to_fire = True # Let the player be able to fire the bullet
             self.is_boss = True
         if self.resp_pipe_timer.isTimeup():
-            newPipe = getSimulPipe()
+            newPipe = getSimulPipe(True)
             newRespPipe = getRespPipe(PIPE_WIDTH + 10) # generating one resp right after the simul pipe
             self.upperPipes.append(newPipe[0])
             self.lowerPipes.append(newPipe[1])
@@ -386,11 +386,13 @@ class GameState:
             self.is_boss = False
         if self.is_boss or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave):
             print("BOSS HERE!!")
-        print("reward", reward)
+        print(self.playery > PLAYER_HEIGHT / 2 + 7)
         return image_data, reward, terminal, score, boss_training and (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
 
-def getSimulPipe():
+def getSimulPipe(is_guarantee_no_hole=False):
     t = random.randint(0, 1)
+    if is_guarantee_no_hole:
+        t=0
     pipeX = SCREENWIDTH + 10
     """returns a randomly generated pipe"""
 
