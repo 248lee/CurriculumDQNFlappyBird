@@ -10,7 +10,7 @@ from enum import Enum
 
 fireReward = 0.08
 misShoot = -0.01
-shootWrong = -0.01
+shootWrong = -0.05
 sweetBoss = 0.5
 isSweet = False
 boss_training = True
@@ -318,7 +318,7 @@ class GameState:
                     if open_ratio < 0.15:
                         reward = shootWrong
                     else:
-                        reward = open_ratio * 2
+                        reward =  2 * (open_ratio**0.5)
                     print("Big enough? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
