@@ -542,7 +542,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, is_
         #如果D满了就替换最早的观测
         if len(D) > REPLAY_MEMORY:
             D.popleft()
-        if len(D_boss) > REPLAY_MEMORY / 4:
+        if len(D_boss) > REPLAY_MEMORY / 3:
             D_boss.popleft()
 
         # 更新状态，不断迭代
@@ -567,8 +567,8 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, is_
             if len(D_boss) == 0:
                 minibatch = random.sample(D, BATCH)
             else:
-                minibatch = random.sample(D, int(BATCH * 3 / 4))
-                remainingBATCH = BATCH - (int(BATCH * 3 / 4))
+                minibatch = random.sample(D, int(BATCH * 1 / 2))
+                remainingBATCH = BATCH - (int(BATCH * 1 / 2))
                 boss_minibatch = random.sample(D_boss, remainingBATCH)
                 for btch in boss_minibatch:
                     minibatch.append(btch)

@@ -9,9 +9,10 @@ from itertools import cycle
 from enum import Enum
 
 fireReward = 0.08
-misShoot = -0.01
-shootWrong = -0.05
+misShoot = -0.8
+shootWrong = -1
 sweetBoss = 0.5
+no_fire_punishment = -1
 isSweet = False
 
 FPS = 30000
@@ -287,6 +288,8 @@ class GameState:
 
         # check if passes redline
         if self.is_redline_appeared and self.redlinex <= self.playerx:
+            if self.is_able_to_fire:
+                reward = no_fire_punishment
             self.is_able_to_fire = False
             self.is_boss = False
             self.boss_afterwave_counter = 0
