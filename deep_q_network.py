@@ -198,7 +198,8 @@ def myprint(s):
     with open('structure.txt','w') as f:
         print(s, file=f)
 
-def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max_steps, resume_Adam, learning_rate=1e-6, event=None, is_colab=False):
+def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, is_activate_boss_memory, max_steps, resume_Adam, learning_rate=1e-6, event=None, is_colab=False):
+    hindsight_memory = []
     neuron = open("neurons.txt", 'w')
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Ask the tensorflow to shut up. IF you disable this, a bunch of logs from tensorflow will put you down when you're using colab.
     tf.debugging.set_log_device_placement(False)
@@ -404,7 +405,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
     #初始化状态并且预处理图片，把连续的四帧图像作为一个输入（State）
     do_nothing = np.zeros(num_of_actions)
     do_nothing[0] = 1
-    x_t, r_0, terminal, _, _ = game_state.frame_step(do_nothing)
+    x_t, r_0, terminal, _, _, _ = game_state.frame_step(do_nothing)
     x_t = cv2.cvtColor(cv2.resize(x_t, (input_sidelength[0], input_sidelength[1])), cv2.COLOR_RGB2GRAY)
     #ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
     s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
@@ -486,7 +487,7 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
 
 
         #执行这个动作并观察下一个状态以及reward
-        x_t1_colored, r_t, terminal, score, is_boss = game_state.frame_step(a_t_to_game)
+        x_t1_colored, r_t, terminal, score, is_boss, is_hindsight = game_state.frame_step(a_t_to_game)
         print("============== score ====================")
         print(score)
 
@@ -521,10 +522,23 @@ def trainNetwork(stage, num_of_actions, lock_mode, is_simple_actions_locked, max
         terminal = tf.constant(terminal, dtype=tf.float32)
 
         # 将观测值存入之前定义的观测存储器D中
-        if is_boss:
-            D_boss.append((s_t_D, a_t_D, r_t_D, s_t1_D, terminal))
+        if is_hindsight:
+            hindsight_memory.append((s_t_D, a_t_D, r_t_D, s_t1_D, terminal))
         else:
-            D.append((s_t_D, a_t_D, r_t_D, s_t1_D, terminal))
+            if len(hindsight_memory) > 0:
+                tmp_final_hm = hindsight_memory[len(hindsight_memory) - 1]
+                #hindsight_memory[len(hindsight_memory) - 1] = (hindsight_memory[len(hindsight_memory) - 1][0], hindsight_memory[len(hindsight_memory) - 1][1], hindsight_memory[0][2], hindsight_memory[len(hindsight_memory) - 1][3], hindsight_memory[len(hindsight_memory) - 1][4])
+                hindsight_memory[0] = (hindsight_memory[0][0], hindsight_memory[0][1], tmp_final_hm[2], hindsight_memory[0][3], hindsight_memory[0][4])
+                for hm in hindsight_memory:
+                    if is_activate_boss_memory:
+                        D_boss.append(hm)
+                    else:
+                        D.append(hm)
+            hindsight_memory = []
+            if is_activate_boss_memory and is_boss:
+                D_boss.append((s_t_D, a_t_D, r_t_D, s_t1_D, terminal))
+            else:
+                D.append((s_t_D, a_t_D, r_t_D, s_t1_D, terminal))
         #如果D满了就替换最早的观测
         if len(D) > REPLAY_MEMORY:
             D.popleft()

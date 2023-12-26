@@ -13,7 +13,6 @@ misShoot = -0.01
 shootWrong = -0.05
 sweetBoss = 0.5
 isSweet = False
-boss_training = True
 
 FPS = 30000
 SCREENWIDTH  = 288
@@ -128,6 +127,8 @@ class GameState:
         self.is_boss = False
         self.boss_afterwave = 100
         self.boss_afterwave_counter = 101
+        self.is_hindsight = False
+        self.is_previous_frame_hindsight = False
 
     def initializeGame(self):
         initialize_game()
@@ -136,6 +137,7 @@ class GameState:
         exit(0)
         
     def frame_step(self, input_actions):
+        self.is_previous_frame_hindsight = self.is_hindsight
         pygame.event.pump()
 
         self.pipe_generating_timer.pushTimer()
@@ -165,6 +167,7 @@ class GameState:
                 delta = 5
                 self.bullety = self.playery + delta
                 self.is_able_to_fire = False # The player can only fire once until the next resppipe comes
+                self.is_hindsight = True # Start of the hindsight interval
             reward = fireReward
 
         
@@ -323,6 +326,7 @@ class GameState:
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
                     uPipe['freeze'] = True
+                    self.is_hindsight = False # end of the hindsight interval
             elif self.is_bullet_fired and uPipe['action'] == 0:
                 # upper and lower pipe rects
                 uPipeRect = pygame.Rect(uPipe['x'], uPipe['y'], PIPE_WIDTH, PIPE_HEIGHT)
@@ -338,6 +342,7 @@ class GameState:
                     print("Are you dumb? do not shoot other normal pipes, dude? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
+                    self.is_hindsight = False # end of the hindsight interval
 
         
         # draw sprites
@@ -386,8 +391,7 @@ class GameState:
             self.is_boss = False
         if self.is_boss or (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave):
             print("BOSS HERE!!")
-        print(self.playery > PLAYER_HEIGHT / 2 + 7)
-        return image_data, reward, terminal, score, boss_training and (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave)
+        return image_data, reward, terminal, score, (self.is_boss or self.boss_afterwave_counter < self.boss_afterwave), self.is_hindsight or self.is_previous_frame_hindsight
 
 def getSimulPipe(is_guarantee_no_hole=False):
     t = random.randint(0, 1)
