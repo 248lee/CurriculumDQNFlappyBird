@@ -192,6 +192,7 @@ class GameState:
             if self.is_bullet_fired:
                 reward = misShoot
                 print("You should shoot something, dude? reward: ", reward)
+                self.is_hindsight = False
             self.is_bullet_fired = False
         if self.is_bullet_fired:
             self.bulletx += self.bullet_speedX
