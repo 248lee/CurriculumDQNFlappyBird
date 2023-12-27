@@ -15,7 +15,7 @@ sweetBoss = 0.5
 no_fire_punishment = -1
 isSweet = False
 
-FPS = 30000
+FPS = 30
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
