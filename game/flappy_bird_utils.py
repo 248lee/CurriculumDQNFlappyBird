@@ -38,7 +38,12 @@ def load():
     )
 
     # base (ground) sprite
-    IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
+    IMAGES['base'] = (
+        pygame.image.load('assets/sprites/base.png').convert_alpha(),
+        pygame.image.load('assets/sprites/base_alert.png').convert_alpha(),
+        pygame.image.load('assets/sprites/base_dead.png').convert_alpha(),
+        pygame.image.load('assets/sprites/base_great.png').convert_alpha()
+    )
 
     # sounds
     if 'win' in sys.platform:

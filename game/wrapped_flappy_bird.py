@@ -92,7 +92,7 @@ class GameState:
         self.redlinex = SCREENWIDTH + 10
         self.playery = int((SCREENHEIGHT - PLAYER_HEIGHT) / 2)
         self.basex = 0
-        self.baseShift = IMAGES['base'].get_width() - BACKGROUND_WIDTH
+        self.baseShift = IMAGES['base'][0].get_width() - BACKGROUND_WIDTH
 
         newPipe1 = [
         {'x': SCREENWIDTH, 'y': 50 - PIPE_HEIGHT, 'type': 0, 'action': 0},  # upper pipe
@@ -130,6 +130,7 @@ class GameState:
         self.boss_afterwave_counter = 101
         self.is_hindsight = False
         self.is_previous_frame_hindsight = False
+        self.base_situation = 0 # 0 -> base; 1 -> alert; 2 -> dead; 3 -> great
 
     def initializeGame(self):
         initialize_game()
@@ -177,7 +178,7 @@ class GameState:
         if (self.loopIter + 1) % 3 == 0:
             self.playerIndex = next(PLAYER_INDEX_GEN)
         self.loopIter = (self.loopIter + 1) % 30
-        self.basex = -((-self.basex + 100) % self.baseShift)
+        # self.basex = -((-self.basex + 100) % self.baseShift)
 
         # player's movement
         if self.playerVelY < self.playerMaxVelY and not self.playerFlapped:
@@ -269,6 +270,8 @@ class GameState:
             self.redline_timer.turnoffTimer()
             self.is_able_to_fire = True # Let the player be able to fire the bullet
             self.is_boss = True
+            self.base_situation = 1
+            
         if self.resp_pipe_timer.isTimeup():
             newPipe = getSimulPipe(True)
             newRespPipe = getRespPipe(PIPE_WIDTH + 10) # generating one resp right after the simul pipe
@@ -290,6 +293,7 @@ class GameState:
         if self.is_redline_appeared and self.redlinex <= self.playerx:
             if self.is_able_to_fire:
                 reward = no_fire_punishment
+                self.base_situation = 2
             self.is_able_to_fire = False
             self.is_boss = False
             self.boss_afterwave_counter = 0
@@ -312,7 +316,7 @@ class GameState:
             self.__init__()
             
 
-        # chech bullet his simul pipes            
+        # check bullet his simul pipes            
         # check bullet hit resp pipes
         for uPipe, lPipe in zip(self.upperPipes, self.lowerPipes):
             bulletRect = pygame.Rect(self.bulletx, self.bullety, BULLET_WIDTH, BULLET_HEIGHT)
@@ -324,8 +328,10 @@ class GameState:
                     open_ratio = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY)
                     if open_ratio < 0.15:
                         reward = shootWrong
+                        self.base_situation = 2
                     else:
                         reward =  2 * (open_ratio**0.5)
+                        self.base_situation = 3
                     print("Big enough? reward: ", reward)
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
@@ -347,6 +353,7 @@ class GameState:
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
                     self.is_hindsight = False # end of the hindsight interval
+                    self.base_situation = 2
 
         
         # draw sprites
@@ -367,8 +374,9 @@ class GameState:
             else:
                 SCREEN.blit(IMAGES['pipe2'][0], (uPipe['x'], uPipe['y']))
                 SCREEN.blit(IMAGES['pipe2'][1], (lPipe['x'], lPipe['y']))
-
-        SCREEN.blit(IMAGES['base'], (self.basex, BASEY))
+        
+        # Draw base according to the situation
+        SCREEN.blit(IMAGES['base'][self.base_situation], (self.basex, BASEY))
         # print score so player overlaps the score
         # showScore(self.score)
         SCREEN.blit(IMAGES['player'][self.playerIndex],
@@ -389,6 +397,8 @@ class GameState:
                 #SOUNDS['point'].play() #disable it if you do not need sound
                 reward = 1
                 print("Good! reward: ", reward)
+                if pipe['action'] == 1:
+                    self.base_situation = 0
         score = self.score
         #print self.upperPipes[0]['y'] + PIPE_HEIGHT - int(BASEY * 0.2)
         if terminal:
