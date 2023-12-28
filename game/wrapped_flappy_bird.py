@@ -10,12 +10,12 @@ from enum import Enum
 
 fireReward = 0.08
 misShoot = -0.8
-shootWrong = -1
+shootWrong = -1.1
 sweetBoss = 0.5
-no_fire_punishment = -1
+no_fire_punishment = -1.1
 isSweet = False
 
-FPS = 30
+FPS = 30000
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
 
@@ -84,7 +84,7 @@ class GameState:
     def __init__(self):
         self.pipe_generating_timer = JohnTimer(PIPEGENERATE_DELTASTEPS)
         self.resp_pipe_timer = JohnTimer(int(PIPEGENERATE_DELTASTEPS * 1.5))
-        self.redline_timer = JohnTimer(int(PIPEGENERATE_DELTASTEPS * 1.08))
+        self.redline_timer = JohnTimer(int(PIPEGENERATE_DELTASTEPS * 1.15))
         self.score = self.playerIndex = self.loopIter = 0
         self.playerx = int(SCREENWIDTH * 0.2)
         self.bulletx = self.playerx
@@ -293,7 +293,10 @@ class GameState:
         if self.is_redline_appeared and self.redlinex <= self.playerx:
             if self.is_able_to_fire:
                 reward = no_fire_punishment
-                self.base_situation = 2
+                if isSweet:
+                    self.base_situation = 3
+                else:
+                    self.base_situation = 2
             self.is_able_to_fire = False
             self.is_boss = False
             self.boss_afterwave_counter = 0
@@ -328,7 +331,10 @@ class GameState:
                     open_ratio = ((lPipe['y'] - uPipe['y'] - PIPE_HEIGHT) / BASEY)
                     if open_ratio < 0.15:
                         reward = shootWrong
-                        self.base_situation = 2
+                        if isSweet:
+                            self.base_situation = 3
+                        else:
+                            self.base_situation = 2
                     else:
                         reward =  2 * (open_ratio**0.5)
                         self.base_situation = 3
@@ -353,7 +359,10 @@ class GameState:
                     self.bulletx = 2 * SCREENWIDTH # only for make suring
                     self.is_bullet_fired = False
                     self.is_hindsight = False # end of the hindsight interval
-                    self.base_situation = 2
+                    if isSweet:
+                        self.base_situation = 3
+                    else:
+                        self.base_situation = 2
 
         
         # draw sprites
