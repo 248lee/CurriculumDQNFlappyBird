@@ -1,3 +1,7 @@
+# This project is DEPRECATED.
+It has been moved to https://github.com/248lee/NewCurriculumDQNFlappyBird
+
+
 # DQN flappy bird with tensorflow2
 
 # Installation Dependencies:
